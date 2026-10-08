@@ -1,105 +1,68 @@
--- Alvora Sprint 1 — profiles schema (reference)
--- Run in the Supabase SQL editor if these objects do not already exist.
--- Align column names with this file if your live table differs.
+-- Alvora Sprint 1 — safe upgrade for existing public.profiles
+-- Does NOT recreate the table.
+-- Does NOT drop any columns.
+-- Preserves existing rows (user_id, reputation_score, etc. remain intact).
 
-create extension if not exists "pgcrypto";
+-- 1) Add required application columns (nullable first)
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS username text,
+  ADD COLUMN IF NOT EXISTS full_name text,
+  ADD COLUMN IF NOT EXISTS avatar_url text,
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz;
 
-create table if not exists public.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
-  username text not null unique,
-  full_name text,
-  headline text,
-  bio text,
-  location text,
-  website text,
-  github_url text,
-  linkedin_url text,
-  avatar_url text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint username_format check (username ~ '^[a-z0-9_]{3,30}$')
+-- 2) Backfill new columns for existing rows (required before NOT NULL / UNIQUE)
+UPDATE public.profiles
+SET
+  username = COALESCE(
+    NULLIF(username, ''),
+    'user_' || substr(replace(COALESCE(user_id, id)::text, '-', ''), 1, 12)
+  ),
+  updated_at = COALESCE(updated_at, created_at, now())
+WHERE username IS NULL
+   OR username = ''
+   OR updated_at IS NULL;
+
+-- Resolve any rare username collisions after backfill
+UPDATE public.profiles AS p
+SET username = left(p.username, 20) || '_' || substr(replace(COALESCE(p.user_id, p.id)::text, '-', ''), 1, 8)
+WHERE EXISTS (
+  SELECT 1
+  FROM public.profiles AS other
+  WHERE other.username = p.username
+    AND other.ctid <> p.ctid
 );
 
-create index if not exists profiles_username_idx on public.profiles (username);
+-- 3) Enforce application defaults / nullability
+ALTER TABLE public.profiles
+  ALTER COLUMN updated_at SET DEFAULT now(),
+  ALTER COLUMN updated_at SET NOT NULL,
+  ALTER COLUMN username SET NOT NULL;
 
-alter table public.profiles enable row level security;
+-- 4) Enforce username uniqueness (skip if constraint already exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'profiles_username_key'
+      AND conrelid = 'public.profiles'::regclass
+  ) THEN
+    ALTER TABLE public.profiles
+      ADD CONSTRAINT profiles_username_key UNIQUE (username);
+  END IF;
+END $$;
 
-drop policy if exists "Profiles are publicly readable" on public.profiles;
-create policy "Profiles are publicly readable"
-  on public.profiles
-  for select
-  using (true);
-
-drop policy if exists "Users can insert own profile" on public.profiles;
-create policy "Users can insert own profile"
-  on public.profiles
-  for insert
-  with check (auth.uid() = id);
-
-drop policy if exists "Users can update own profile" on public.profiles;
-create policy "Users can update own profile"
-  on public.profiles
-  for update
-  using (auth.uid() = id)
-  with check (auth.uid() = id);
-
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  base_username text;
-  final_username text;
-begin
-  base_username := lower(
-    coalesce(
-      nullif(new.raw_user_meta_data ->> 'username', ''),
-      split_part(new.email, '@', 1)
-    )
-  );
-  base_username := regexp_replace(base_username, '[^a-z0-9_]', '_', 'g');
-  base_username := left(base_username, 24);
-
-  if length(base_username) < 3 then
-    base_username := 'user';
-  end if;
-
-  final_username := base_username;
-
-  if exists (select 1 from public.profiles where username = final_username) then
-    final_username := left(base_username, 20) || '_' || substr(replace(new.id::text, '-', ''), 1, 6);
-  end if;
-
-  insert into public.profiles (id, username, full_name)
-  values (
-    new.id,
-    final_username,
-    nullif(new.raw_user_meta_data ->> 'full_name', '')
-  )
-  on conflict (id) do nothing;
-
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
-
-create or replace function public.set_profiles_updated_at()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$;
-
-drop trigger if exists profiles_set_updated_at on public.profiles;
-create trigger profiles_set_updated_at
-  before update on public.profiles
-  for each row execute function public.set_profiles_updated_at();
+-- 5) Username format check used by the app (skip if already present)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'profiles_username_format'
+      AND conrelid = 'public.profiles'::regclass
+  ) THEN
+    ALTER TABLE public.profiles
+      ADD CONSTRAINT profiles_username_format
+      CHECK (username ~ '^[a-z0-9_]{3,30}$');
+  END IF;
+END $$;
