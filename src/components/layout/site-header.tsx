@@ -27,6 +27,9 @@ export async function SiteHeader() {
                 <Link href="/dashboard">Home</Link>
               </Button>
               <Button asChild variant="ghost" size="sm">
+                <Link href="/projects">Projects</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
                 <Link href="/profile/edit">Profile</Link>
               </Button>
               <form action={logoutAction}>

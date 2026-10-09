@@ -1,3 +1,4 @@
+import { countOwnerProjects } from "@/lib/project/queries";
 import type { Profile } from "@/lib/supabase/types";
 
 export type BuilderStats = {
@@ -7,13 +8,13 @@ export type BuilderStats = {
   reputation: number;
 };
 
-/**
- * Sprint 1 has no projects/validations/reviews tables yet.
- * Surface 0 until those sources exist. Reputation uses profiles.reputation_score.
- */
-export function getBuilderStats(profile: Profile | null): BuilderStats {
+export async function getBuilderStats(
+  profile: Profile | null,
+  userId: string,
+): Promise<BuilderStats> {
+  const projects = await countOwnerProjects(userId);
   return {
-    projects: 0,
+    projects,
     validationRequests: 0,
     reviews: 0,
     reputation: profile?.reputation_score ?? 0,

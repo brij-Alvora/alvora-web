@@ -8,8 +8,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { ProjectCard } from "@/components/projects/project-card";
 import type { BuilderStats } from "@/lib/dashboard/stats";
 import type { Profile } from "@/lib/supabase/types";
+import type { Project } from "@/lib/supabase/types";
 import {
   getFirstName,
   getProfileCompletion,
@@ -24,9 +26,15 @@ type BuilderHomeProps = {
   email: string;
   profile: Profile | null;
   stats: BuilderStats;
+  projects: Project[];
 };
 
-export function BuilderHome({ email, profile, stats }: BuilderHomeProps) {
+export function BuilderHome({
+  email,
+  profile,
+  stats,
+  projects,
+}: BuilderHomeProps) {
   const displayName = hasProfileValue(profile?.full_name)
     ? profile.full_name
     : hasProfileValue(profile?.username)
@@ -168,6 +176,40 @@ export function BuilderHome({ email, profile, stats }: BuilderHomeProps) {
             </Card>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">My Projects</h2>
+            <p className="text-sm text-muted-foreground">
+              Drafts stay private. Published projects appear at /project/[slug].
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/projects">View all</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/projects/new">Create project</Link>
+            </Button>
+          </div>
+        </div>
+        {projects.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+            No projects yet. Create one to start your showcase.
+          </p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {projects.slice(0, 4).map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                showOwnerActions
+              />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

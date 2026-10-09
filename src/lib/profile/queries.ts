@@ -43,3 +43,11 @@ export async function getProfileByUsername(
 ): Promise<Profile | null> {
   return fetchProfileWhere({ username: username.toLowerCase() });
 }
+
+export async function getProfileByAuthId(
+  userId: string,
+): Promise<Profile | null> {
+  const byUserId = await fetchProfileWhere({ user_id: userId });
+  if (byUserId) return byUserId;
+  return fetchProfileWhere({ id: userId });
+}
