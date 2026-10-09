@@ -24,7 +24,7 @@ export async function SiteHeader() {
           {user ? (
             <>
               <Button asChild variant="ghost" size="sm">
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard">Home</Link>
               </Button>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/profile/edit">Profile</Link>

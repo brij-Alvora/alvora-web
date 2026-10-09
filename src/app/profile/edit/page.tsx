@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 
+import { AvatarUploader } from "@/components/profile/avatar-uploader";
 import { ProfileForm } from "@/components/profile/profile-form";
-import { getCurrentProfile } from "@/lib/actions/profile";
+import { hasProfileValue } from "@/lib/profile/presentation";
+import { getCurrentProfile } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
 import {
   Card,
@@ -26,6 +28,11 @@ export default async function EditProfilePage() {
   }
 
   const profile = await getCurrentProfile();
+  const displayName = hasProfileValue(profile?.full_name)
+    ? profile.full_name
+    : hasProfileValue(profile?.username)
+      ? profile.username
+      : (user.email?.split("@")[0] ?? "Builder");
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10 sm:px-6">
@@ -37,6 +44,18 @@ export default async function EditProfilePage() {
           This information appears on your public Alvora page.
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Photo</CardTitle>
+          <CardDescription>
+            Upload a square image. It appears on your dashboard and public profile.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AvatarUploader profile={profile} displayName={displayName} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

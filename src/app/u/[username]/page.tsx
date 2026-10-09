@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProfileView } from "@/components/profile/profile-view";
-import { getProfileByUsername } from "@/lib/actions/profile";
+import { getProfileByUsername } from "@/lib/profile/queries";
+
+export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ username: string }>;
@@ -36,7 +38,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6">
+    <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <ProfileView profile={profile} />
     </div>
   );

@@ -13,6 +13,7 @@ export type Json =
 
 export type Profile = {
   id: string;
+  user_id: string | null;
   username: string;
   full_name: string | null;
   headline: string | null;
@@ -22,12 +23,14 @@ export type Profile = {
   github_url: string | null;
   linkedin_url: string | null;
   avatar_url: string | null;
+  reputation_score: number | null;
   created_at: string;
   updated_at: string;
 };
 
 export type ProfileInsert = {
   id: string;
+  user_id?: string | null;
   username: string;
   full_name?: string | null;
   headline?: string | null;
@@ -37,6 +40,7 @@ export type ProfileInsert = {
   github_url?: string | null;
   linkedin_url?: string | null;
   avatar_url?: string | null;
+  reputation_score?: number | null;
   created_at?: string;
   updated_at?: string;
 };
