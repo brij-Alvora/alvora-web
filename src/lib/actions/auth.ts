@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { getCurrentProfile } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
 import { absoluteUrl } from "@/lib/utils";
 import {
@@ -36,6 +37,12 @@ export async function loginAction(
 
   if (error) {
     return { error: error.message };
+  }
+
+  const profile = await getCurrentProfile();
+  if (profile?.account_status === "suspended") {
+    await supabase.auth.signOut();
+    return { error: "This account is suspended." };
   }
 
   redirect("/dashboard");

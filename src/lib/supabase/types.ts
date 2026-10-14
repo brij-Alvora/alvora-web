@@ -11,6 +11,10 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type UserRole = "user" | "admin";
+export type AccountStatus = "active" | "suspended";
+export type ModerationStatus = "visible" | "hidden" | "flagged";
+
 export type Profile = {
   id: string;
   user_id: string | null;
@@ -24,6 +28,8 @@ export type Profile = {
   linkedin_url: string | null;
   avatar_url: string | null;
   reputation_score: number | null;
+  role: UserRole;
+  account_status: AccountStatus;
   created_at: string;
   updated_at: string;
 };
@@ -41,6 +47,8 @@ export type ProfileInsert = {
   linkedin_url?: string | null;
   avatar_url?: string | null;
   reputation_score?: number | null;
+  role?: UserRole;
+  account_status?: AccountStatus;
   created_at?: string;
   updated_at?: string;
 };
@@ -134,6 +142,7 @@ export type Review = {
   what_works_well: string | null;
   improvement_areas: string | null;
   recommendations: string | null;
+  moderation_status: ModerationStatus;
   created_at: string;
 };
 
@@ -147,6 +156,7 @@ export type ReviewInsert = {
   what_works_well?: string | null;
   improvement_areas?: string | null;
   recommendations?: string | null;
+  moderation_status?: ModerationStatus;
   created_at?: string;
 };
 

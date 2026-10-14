@@ -34,6 +34,8 @@ export function mapProfile(row: Record<string, unknown> | null): Profile | null 
     avatar_url: asNullableString(row.avatar_url),
     reputation_score:
       typeof row.reputation_score === "number" ? row.reputation_score : null,
+    role: row.role === "admin" ? "admin" : "user",
+    account_status: row.account_status === "suspended" ? "suspended" : "active",
     created_at: asRequiredString(row.created_at),
     updated_at: asRequiredString(row.updated_at, asRequiredString(row.created_at)),
   };

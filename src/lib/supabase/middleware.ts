@@ -10,6 +10,7 @@ const PROTECTED_PREFIXES = [
   "/validations",
   "/reputation",
   "/discover",
+  "/admin",
 ];
 
 export async function updateSession(request: NextRequest) {

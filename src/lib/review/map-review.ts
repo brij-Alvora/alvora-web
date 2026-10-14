@@ -33,6 +33,12 @@ export function mapReview(row: Record<string, unknown> | null): Review | null {
     what_works_well: asNullableString(row.what_works_well),
     improvement_areas: asNullableString(row.improvement_areas),
     recommendations: asNullableString(row.recommendations),
+    moderation_status:
+      row.moderation_status === "hidden"
+        ? "hidden"
+        : row.moderation_status === "flagged"
+          ? "flagged"
+          : "visible",
     created_at: asString(row.created_at),
   };
 }

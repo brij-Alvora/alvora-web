@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getAdminContext } from "@/lib/admin/access";
 import { logoutAction } from "@/lib/actions/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ export async function SiteHeader() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const admin = user ? await getAdminContext() : null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
@@ -41,6 +43,11 @@ export async function SiteHeader() {
               <Button asChild variant="ghost" size="sm">
                 <Link href="/profile/edit">Profile</Link>
               </Button>
+              {admin ? (
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/admin">Admin</Link>
+                </Button>
+              ) : null}
               <form action={logoutAction}>
                 <Button type="submit" variant="outline" size="sm">
                   Log out
