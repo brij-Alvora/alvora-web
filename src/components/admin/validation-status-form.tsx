@@ -26,7 +26,7 @@ export function ValidationStatusForm({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Button asChild size="sm" variant="outline">
-        <Link href={`/validations/${requestId}`}>View</Link>
+        <Link href={`/admin/validations/${requestId}`}>View</Link>
       </Button>
       {STATUSES.map((status) => (
         <Button

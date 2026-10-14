@@ -15,7 +15,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <AdminStatGrid counts={counts} />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="shadow-sm">
           <CardContent className="space-y-3 p-5">
             <p className="font-medium">Users</p>
@@ -24,6 +24,17 @@ export default async function AdminDashboardPage() {
             </p>
             <Button asChild size="sm">
               <Link href="/admin/users">Open users</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardContent className="space-y-3 p-5">
+            <p className="font-medium">Projects</p>
+            <p className="text-sm text-muted-foreground">
+              Filter published work by category and status.
+            </p>
+            <Button asChild size="sm">
+              <Link href="/admin/projects">Open projects</Link>
             </Button>
           </CardContent>
         </Card>

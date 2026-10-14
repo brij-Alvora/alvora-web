@@ -1,10 +1,26 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AdminFields } from "@/components/admin/admin-fields";
 import { UserActions } from "@/components/admin/user-actions";
-import { getAdminUserById } from "@/lib/admin/queries";
+import {
+  getAdminProjects,
+  getAdminReputationEvents,
+  getAdminReviews,
+  getAdminUserById,
+  getAdminValidations,
+} from "@/lib/admin/queries";
 import { formatDiscoverDate } from "@/lib/discover/format";
+import {
+  cityLabel,
+  countryLabel,
+  resolveProfileGeography,
+} from "@/lib/geo/resolve";
 import { hasProfileValue } from "@/lib/profile/presentation";
+import {
+  REPUTATION_EVENT_LABELS,
+  isReputationEventType,
+} from "@/lib/reputation/rules";
 import { Card, CardContent } from "@/components/ui/card";
 
 type PageProps = {
@@ -15,11 +31,35 @@ export const metadata = {
   title: "Admin user · Alvora",
 };
 
+function owns(ids: Set<string>, value: string | null | undefined) {
+  return Boolean(value && ids.has(value));
+}
+
 export default async function AdminUserDetailPage({ params }: PageProps) {
   const { id } = await params;
   const row = await getAdminUserById(id);
   if (!row) notFound();
 
+  const ids = new Set(
+    [row.profile.id, row.profile.user_id].filter(
+      (value): value is string => Boolean(value),
+    ),
+  );
+
+  const [projects, validations, reviews, events] = await Promise.all([
+    getAdminProjects(),
+    getAdminValidations(),
+    getAdminReviews(),
+    getAdminReputationEvents(),
+  ]);
+
+  const ownedProjects = projects.filter((project) => owns(ids, project.owner_id));
+  const ownedValidations = validations.filter((request) =>
+    owns(ids, request.requested_by),
+  );
+  const ownedReviews = reviews.filter((review) => owns(ids, review.reviewer_id));
+  const ownedEvents = events.filter((event) => owns(ids, event.user_id));
+  const place = resolveProfileGeography(row.profile);
   const name = hasProfileValue(row.profile.full_name)
     ? row.profile.full_name
     : row.profile.username;
@@ -35,53 +75,109 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             <h2 className="mt-1 text-2xl font-semibold tracking-tight">{name}</h2>
             <p className="text-sm text-muted-foreground">@{row.profile.username}</p>
           </div>
-          <dl className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs uppercase tracking-wider text-muted-foreground">
-                Reputation
-              </dt>
-              <dd className="text-sm font-medium">
-                {row.points} pts · {row.level}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wider text-muted-foreground">
-                Join date
-              </dt>
-              <dd className="text-sm font-medium">
-                {formatDiscoverDate(row.profile.created_at)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wider text-muted-foreground">
-                Status
-              </dt>
-              <dd className="text-sm font-medium capitalize">
-                {row.profile.account_status}
-              </dd>
-            </div>
-            {row.profile.headline ? (
-              <div>
-                <dt className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Headline
-                </dt>
-                <dd className="text-sm font-medium">{row.profile.headline}</dd>
-              </div>
-            ) : null}
-          </dl>
+          <AdminFields
+            items={[
+              { label: "Reputation", value: `${row.points} pts · ${row.level}` },
+              {
+                label: "Join date",
+                value: formatDiscoverDate(row.profile.created_at),
+              },
+              { label: "Status", value: row.profile.account_status },
+              { label: "Headline", value: row.profile.headline },
+              { label: "Location", value: row.profile.location },
+              { label: "Country", value: countryLabel(place) },
+              { label: "City", value: cityLabel(place) },
+              { label: "Website", value: row.profile.website },
+            ]}
+          />
           <UserActions
             profileId={row.profile.id}
             username={row.profile.username}
             status={row.profile.account_status}
           />
-          <Link
-            href="/admin/users"
-            className="inline-block text-sm text-muted-foreground hover:underline"
-          >
-            Back to users
-          </Link>
         </CardContent>
       </Card>
+
+      <Related
+        title="Projects"
+        empty="No projects."
+        items={ownedProjects.map((project) => ({
+          href: `/admin/projects/${project.id}`,
+          title: project.title,
+          meta: `${project.status} · ${project.category ?? "Uncategorized"}`,
+        }))}
+      />
+      <Related
+        title="Validations"
+        empty="No validation requests."
+        items={ownedValidations.map((request) => ({
+          href: `/admin/validations/${request.id}`,
+          title: request.request_title,
+          meta: `${request.status} · ${request.projectTitle ?? "Project"}`,
+        }))}
+      />
+      <Related
+        title="Reviews"
+        empty="No reviews submitted."
+        items={ownedReviews.map((review) => ({
+          href: `/admin/reviews/${review.id}`,
+          title: `${review.rating}/5 · ${review.project?.title ?? "Project"}`,
+          meta: review.moderation_status,
+        }))}
+      />
+      <Related
+        title="Reputation events"
+        empty="No events."
+        items={ownedEvents.map((event) => ({
+          href: "/admin/events",
+          title: isReputationEventType(event.event_type)
+            ? REPUTATION_EVENT_LABELS[event.event_type]
+            : event.event_type,
+          meta: `${event.points} pts · ${formatDiscoverDate(event.created_at)}`,
+        }))}
+      />
+
+      <Link
+        href="/admin/users"
+        className="inline-block text-sm text-muted-foreground hover:underline"
+      >
+        Back to users
+      </Link>
     </section>
+  );
+}
+
+function Related({
+  title,
+  empty,
+  items,
+}: {
+  title: string;
+  empty: string;
+  items: { href: string; title: string; meta: string }[];
+}) {
+  return (
+    <Card className="shadow-sm">
+      <CardContent className="space-y-3 p-5">
+        <h3 className="font-medium">{title}</h3>
+        {items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{empty}</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {items.map((item) => (
+              <li key={`${item.href}-${item.title}`}>
+                <Link
+                  href={item.href}
+                  className="flex items-center justify-between gap-3 py-2 text-sm hover:underline"
+                >
+                  <span className="min-w-0 truncate">{item.title}</span>
+                  <span className="shrink-0 text-muted-foreground">{item.meta}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -23,6 +23,8 @@ export type Profile = {
   headline: string | null;
   bio: string | null;
   location: string | null;
+  city: string | null;
+  country: string | null;
   website: string | null;
   github_url: string | null;
   linkedin_url: string | null;
@@ -42,6 +44,8 @@ export type ProfileInsert = {
   headline?: string | null;
   bio?: string | null;
   location?: string | null;
+  city?: string | null;
+  country?: string | null;
   website?: string | null;
   github_url?: string | null;
   linkedin_url?: string | null;

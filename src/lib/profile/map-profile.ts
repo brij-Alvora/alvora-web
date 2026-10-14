@@ -28,6 +28,8 @@ export function mapProfile(row: Record<string, unknown> | null): Profile | null 
     headline: asNullableString(row.headline),
     bio: asNullableString(row.bio),
     location: asNullableString(row.location),
+    city: asNullableString(row.city),
+    country: asNullableString(row.country),
     website: asNullableString(row.website),
     github_url: asNullableString(row.github_url),
     linkedin_url: asNullableString(row.linkedin_url),

@@ -1,15 +1,55 @@
+import Link from "next/link";
+
+import { AdminToolbar } from "@/components/admin/admin-toolbar";
 import { ReviewModerationActions } from "@/components/admin/review-moderation-actions";
+import {
+  compareDate,
+  firstParam,
+  matchesQuery,
+  type SearchValues,
+} from "@/lib/admin/params";
 import { getAdminReviews } from "@/lib/admin/queries";
 import { formatDiscoverDate } from "@/lib/discover/format";
 import { hasProfileValue } from "@/lib/profile/presentation";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata = {
   title: "Admin reviews · Alvora",
 };
 
-export default async function AdminReviewsPage() {
+type PageProps = {
+  searchParams: Promise<SearchValues>;
+};
+
+export default async function AdminReviewsPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const q = firstParam(params, "q");
+  const sort = firstParam(params, "sort") || "newest";
+  const status = firstParam(params, "status");
   const reviews = await getAdminReviews();
+
+  const filtered = reviews
+    .filter((review) => {
+      const haystack = [
+        review.review_text,
+        review.project?.title,
+        review.reviewer?.username,
+        review.reviewer?.full_name,
+        review.moderation_status,
+        String(review.rating),
+      ]
+        .filter(Boolean)
+        .join(" ");
+      if (!matchesQuery(haystack, q)) return false;
+      if (status && review.moderation_status !== status) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sort === "oldest") return compareDate(a.created_at, b.created_at);
+      if (sort === "rating") return b.rating - a.rating;
+      return compareDate(b.created_at, a.created_at);
+    });
 
   return (
     <section className="space-y-3">
@@ -18,16 +58,26 @@ export default async function AdminReviewsPage() {
           Review moderation
         </h2>
         <p className="text-sm text-muted-foreground">
-          {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+          {filtered.length} of {reviews.length}{" "}
+          {reviews.length === 1 ? "review" : "reviews"}
+          {status ? ` · ${status}` : ""}
         </p>
       </div>
-      {reviews.length === 0 ? (
+      <AdminToolbar
+        placeholder="Search reviewer, project, text"
+        sortOptions={[
+          { value: "newest", label: "Newest" },
+          { value: "oldest", label: "Oldest" },
+          { value: "rating", label: "Rating" },
+        ]}
+      />
+      {filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-          No reviews yet.
+          No reviews match these filters.
         </p>
       ) : (
         <ul className="space-y-3">
-          {reviews.map((review) => {
+          {filtered.map((review) => {
             const reviewer = review.reviewer;
             const name = reviewer
               ? hasProfileValue(reviewer.full_name)
@@ -51,6 +101,9 @@ export default async function AdminReviewsPage() {
                             : ""}
                         </p>
                       </div>
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/admin/reviews/${review.id}`}>View</Link>
+                      </Button>
                     </div>
                     <ReviewModerationActions
                       reviewId={review.id}
