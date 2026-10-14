@@ -61,6 +61,30 @@ export async function getPublishedProjectBySlug(
   return mapProject((data ?? null) as Record<string, unknown> | null);
 }
 
+export async function getAccessibleProject(
+  id: string,
+): Promise<Project | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) return null;
+  const project = mapProject((data ?? null) as Record<string, unknown> | null);
+  if (!project) return null;
+
+  const isOwner = user?.id === project.owner_id;
+  const isPublished = project.status === "published";
+  if (!isOwner && !isPublished) return null;
+  return project;
+}
+
 export async function countOwnerProjects(userId: string): Promise<number> {
   const supabase = await createClient();
   const { count, error } = await supabase

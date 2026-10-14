@@ -81,21 +81,24 @@ export function ProjectView({ project, owner }: ProjectViewProps) {
             </ul>
           ) : null}
 
-          {links.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {links.map((link) => (
-                <Button key={link.href} asChild variant="outline" size="sm">
-                  <Link href={link.href} target="_blank" rel="noopener noreferrer">
-                    <link.icon />
-                    {link.label}
-                    <span className="hidden text-muted-foreground sm:inline">
-                      {displayUrlHost(link.href)}
-                    </span>
-                  </Link>
-                </Button>
-              ))}
-            </div>
-          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {links.map((link) => (
+              <Button key={link.href} asChild variant="outline" size="sm">
+                <Link href={link.href} target="_blank" rel="noopener noreferrer">
+                  <link.icon />
+                  {link.label}
+                  <span className="hidden text-muted-foreground sm:inline">
+                    {displayUrlHost(link.href)}
+                  </span>
+                </Link>
+              </Button>
+            ))}
+            <Button asChild size="sm">
+              <Link href={`/validations/new?project_id=${project.id}`}>
+                Request Validation
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

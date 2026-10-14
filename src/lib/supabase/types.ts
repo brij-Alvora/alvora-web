@@ -89,6 +89,69 @@ export type ProjectInsert = {
 
 export type ProjectUpdate = Partial<Omit<ProjectInsert, "id" | "owner_id">>;
 
+export type ValidationType =
+  | "product_validation"
+  | "ux_validation"
+  | "technical_review"
+  | "idea_validation"
+  | "ai_agent_validation";
+
+export type ValidationStatus = "open" | "in_review" | "completed";
+
+export type ValidationRequest = {
+  id: string;
+  project_id: string;
+  requested_by: string;
+  validation_type: ValidationType;
+  request_title: string;
+  request_text: string | null;
+  status: ValidationStatus;
+  created_at: string;
+};
+
+export type ValidationRequestInsert = {
+  id?: string;
+  project_id: string;
+  requested_by: string;
+  validation_type: ValidationType;
+  request_title: string;
+  request_text?: string | null;
+  status?: ValidationStatus;
+  created_at?: string;
+};
+
+export type ValidationRequestUpdate = Partial<
+  Omit<ValidationRequestInsert, "id" | "requested_by" | "project_id">
+>;
+
+export type Review = {
+  id: string;
+  project_id: string;
+  reviewer_id: string;
+  validation_request_id: string | null;
+  rating: number;
+  review_text: string | null;
+  what_works_well: string | null;
+  improvement_areas: string | null;
+  recommendations: string | null;
+  created_at: string;
+};
+
+export type ReviewInsert = {
+  id?: string;
+  project_id: string;
+  reviewer_id: string;
+  validation_request_id?: string | null;
+  rating: number;
+  review_text?: string | null;
+  what_works_well?: string | null;
+  improvement_areas?: string | null;
+  recommendations?: string | null;
+  created_at?: string;
+};
+
+export type ReviewUpdate = Partial<Omit<ReviewInsert, "id" | "reviewer_id">>;
+
 export type Database = {
   public: {
     Tables: {
@@ -116,6 +179,34 @@ export type Database = {
             columns: ["owner_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      validation_requests: {
+        Row: ValidationRequest;
+        Insert: ValidationRequestInsert;
+        Update: ValidationRequestUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "validation_requests_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reviews: {
+        Row: Review;
+        Insert: ReviewInsert;
+        Update: ReviewUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "reviews_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
             referencedColumns: ["id"];
           },
         ];

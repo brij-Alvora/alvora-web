@@ -3,7 +3,12 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import type { Database } from "@/lib/supabase/types";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/profile", "/projects"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/profile",
+  "/projects",
+  "/validations",
+];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });

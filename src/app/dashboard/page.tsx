@@ -5,6 +5,9 @@ import { getBuilderStats } from "@/lib/dashboard/stats";
 import { getMyProjects } from "@/lib/project/queries";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
+import { getMyValidationRequests } from "@/lib/validation/queries";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Builder Home · Alvora",
@@ -21,9 +24,10 @@ export default async function DashboardPage() {
   }
 
   const profile = await getCurrentProfile();
-  const [stats, projects] = await Promise.all([
+  const [stats, projects, validationRequests] = await Promise.all([
     getBuilderStats(profile, user.id),
     getMyProjects(),
+    getMyValidationRequests(),
   ]);
 
   return (
@@ -32,6 +36,7 @@ export default async function DashboardPage() {
       profile={profile}
       stats={stats}
       projects={projects}
+      validationRequests={validationRequests.slice(0, 5)}
     />
   );
 }

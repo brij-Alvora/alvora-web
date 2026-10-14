@@ -1,17 +1,20 @@
 import {
   BadgeCheck,
   FolderKanban,
-  MessageSquare,
+  Inbox,
   Pencil,
+  Send,
   ShieldCheck,
   Star,
 } from "lucide-react";
 import Link from "next/link";
 
 import { ProjectCard } from "@/components/projects/project-card";
+import { ValidationRequestList } from "@/components/validation/validation-request-list";
 import type { BuilderStats } from "@/lib/dashboard/stats";
 import type { Profile } from "@/lib/supabase/types";
 import type { Project } from "@/lib/supabase/types";
+import type { ValidationRequestWithProject } from "@/lib/validation/queries";
 import {
   getFirstName,
   getProfileCompletion,
@@ -27,6 +30,7 @@ type BuilderHomeProps = {
   profile: Profile | null;
   stats: BuilderStats;
   projects: Project[];
+  validationRequests: ValidationRequestWithProject[];
 };
 
 export function BuilderHome({
@@ -34,6 +38,7 @@ export function BuilderHome({
   profile,
   stats,
   projects,
+  validationRequests,
 }: BuilderHomeProps) {
   const displayName = hasProfileValue(profile?.full_name)
     ? profile.full_name
@@ -57,9 +62,14 @@ export function BuilderHome({
       icon: ShieldCheck,
     },
     {
-      label: "Reviews",
-      value: stats.reviews,
-      icon: MessageSquare,
+      label: "Reviews received",
+      value: stats.reviewsReceived,
+      icon: Inbox,
+    },
+    {
+      label: "Reviews submitted",
+      value: stats.reviewsSubmitted,
+      icon: Send,
     },
     {
       label: "Reputation",
@@ -157,7 +167,7 @@ export function BuilderHome({
             Activity across projects, validation, and reputation.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {statItems.map((item) => (
             <Card key={item.label} className="shadow-sm">
               <CardContent className="p-4 sm:p-5">
@@ -210,6 +220,31 @@ export function BuilderHome({
             ))}
           </div>
         )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">
+              Recent validation requests
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Track Open, In Review, and Completed reviews.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/validations">View all</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/validations/new">New request</Link>
+            </Button>
+          </div>
+        </div>
+        <ValidationRequestList
+          requests={validationRequests}
+          emptyLabel="No validation requests yet."
+        />
       </section>
     </div>
   );
