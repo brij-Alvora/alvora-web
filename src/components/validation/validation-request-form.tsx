@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -55,7 +56,7 @@ export function ValidationRequestForm({
         return;
       }
       if (result.request) {
-        router.push("/validations");
+        router.push(`/validations/${result.request.id}`);
         router.refresh();
       }
     });
@@ -64,7 +65,10 @@ export function ValidationRequestForm({
   if (projects.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Create or publish a project before requesting validation.
+        Create or publish a project before requesting validation.{" "}
+        <Link href="/projects/new" className="font-medium underline underline-offset-4">
+          Create a project
+        </Link>
       </p>
     );
   }

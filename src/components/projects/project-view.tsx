@@ -5,6 +5,7 @@ import type { Profile } from "@/lib/supabase/types";
 import type { Project } from "@/lib/supabase/types";
 import { hasProfileValue } from "@/lib/profile/presentation";
 import { displayUrlHost } from "@/lib/profile/presentation";
+import { ReportButton } from "@/components/reports/report-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -98,6 +99,7 @@ export function ProjectView({ project, owner }: ProjectViewProps) {
                 Request Validation
               </Link>
             </Button>
+            <ReportButton targetType="project" targetId={project.id} />
           </div>
         </CardContent>
       </Card>

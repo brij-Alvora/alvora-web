@@ -14,7 +14,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile, Project, ReputationEvent } from "@/lib/supabase/types";
 import {
-  getOpenValidationRequests,
+  getReviewableValidationRequests,
   getValidationRequestsByIds,
   type ValidationRequestWithProject,
 } from "@/lib/validation/queries";
@@ -195,14 +195,15 @@ async function getRecentActivity(limit = 12): Promise<DiscoverActivityItem[]> {
 }
 
 export async function getDiscoverFeed(userId: string): Promise<DiscoverFeed> {
-  const [projects, recommended, openRequests, topBuilders, activity] =
+  const [projects, recommended, reviewable, topBuilders, activity] =
     await Promise.all([
       getRecentPublishedProjects(8),
       getRecommendedProjects({ userId, limit: 6 }),
-      getOpenValidationRequests(8),
+      getReviewableValidationRequests(),
       getTopBuilders(10),
       getRecentActivity(12),
     ]);
+  const openRequests = reviewable.slice(0, 8);
 
   const builderIds = [
     ...projects.map((project) => project.owner_id),

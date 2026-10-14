@@ -29,6 +29,12 @@ export const registerSchema = z
         /^[a-z0-9_]+$/,
         "Username may only contain lowercase letters, numbers, and underscores",
       ),
+    acceptedLegal: z
+      .any()
+      .transform((value) => value === true || value === "on" || value === "true")
+      .refine((value) => value === true, {
+        message: "Accept the Terms, Privacy Policy, and Acceptable Use Policy",
+      }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

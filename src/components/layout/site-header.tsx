@@ -1,7 +1,9 @@
 import Link from "next/link";
 
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { getAdminContext } from "@/lib/admin/access";
 import { logoutAction } from "@/lib/actions/auth";
+import { getUnreadNotificationCount } from "@/lib/notifications/queries";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +13,7 @@ export async function SiteHeader() {
     data: { user },
   } = await supabase.auth.getUser();
   const admin = user ? await getAdminContext() : null;
+  const unread = user ? await getUnreadNotificationCount(user.id) : 0;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
@@ -43,6 +46,10 @@ export async function SiteHeader() {
               <Button asChild variant="ghost" size="sm">
                 <Link href="/profile/edit">Profile</Link>
               </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/support">Support</Link>
+              </Button>
+              <NotificationBell unread={unread} />
               {admin ? (
                 <Button asChild variant="ghost" size="sm">
                   <Link href="/admin">Admin</Link>

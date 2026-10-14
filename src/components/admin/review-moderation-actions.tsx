@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { moderateReviewAction } from "@/lib/actions/admin";
+import { toast } from "@/lib/toast";
 import type { ModerationStatus } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
 
@@ -21,7 +22,9 @@ export function ReviewModerationActions({
 
   const run = (next: ModerationStatus | "deleted") => {
     startTransition(async () => {
-      await moderateReviewAction(reviewId, next);
+      const result = await moderateReviewAction(reviewId, next);
+      if (result.error) toast(result.error, "error");
+      else toast(result.success ?? "Review updated");
       router.refresh();
     });
   };

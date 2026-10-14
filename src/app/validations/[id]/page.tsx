@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { ReportButton } from "@/components/reports/report-button";
+import { formatDiscoverDate } from "@/lib/discover/format";
 import { ReviewList } from "@/components/review/review-list";
 import { ValidationStatusControls } from "@/components/validation/validation-status-controls";
 import { averageRating } from "@/lib/review/map-review";
@@ -96,7 +98,7 @@ export default async function ValidationRequestDetailPage({
             </p>
           ) : null}
           <p className="text-xs text-muted-foreground">
-            Opened {new Date(request.created_at).toLocaleString()}
+            Opened {formatDiscoverDate(request.created_at)}
           </p>
         </CardContent>
       </Card>
@@ -122,6 +124,8 @@ export default async function ValidationRequestDetailPage({
         </div>
         <ReviewList reviews={reviews} />
       </section>
+
+      <ReportButton targetType="validation_request" targetId={request.id} />
 
       <Button asChild variant="outline">
         <Link href="/validations">Back to Validation Center</Link>

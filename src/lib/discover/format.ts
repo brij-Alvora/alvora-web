@@ -1,22 +1,15 @@
+function pad(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+/** Operational timestamp: DD/MM/YYYY HH:mm:ss */
 export function formatDiscoverDate(isoDate: string | null | undefined) {
   if (!isoDate) return "";
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
 export function formatDiscoverDateTime(isoDate: string | null | undefined) {
-  if (!isoDate) return "";
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
+  return formatDiscoverDate(isoDate);
 }

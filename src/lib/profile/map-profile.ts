@@ -37,7 +37,12 @@ export function mapProfile(row: Record<string, unknown> | null): Profile | null 
     reputation_score:
       typeof row.reputation_score === "number" ? row.reputation_score : null,
     role: row.role === "admin" ? "admin" : "user",
-    account_status: row.account_status === "suspended" ? "suspended" : "active",
+    account_status:
+      row.account_status === "warned" ||
+      row.account_status === "suspended" ||
+      row.account_status === "banned"
+        ? row.account_status
+        : "active",
     created_at: asRequiredString(row.created_at),
     updated_at: asRequiredString(row.updated_at, asRequiredString(row.created_at)),
   };

@@ -111,8 +111,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Joined {formatDiscoverDate(row.profile.created_at)}
-                    {row.profile.account_status === "suspended"
-                      ? " · Suspended"
+                    {row.profile.account_status !== "active"
+                      ? ` · ${row.profile.account_status}`
                       : ""}
                     {row.profile.role === "admin" ? " · Admin" : ""}
                   </p>

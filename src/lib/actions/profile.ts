@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { toUserSafeError } from "@/lib/errors/user-safe";
 import { mapProfile } from "@/lib/profile/map-profile";
 import { awardProfileCompletedIfEligible } from "@/lib/reputation/award";
 import {
@@ -108,7 +109,7 @@ export async function upsertProfileAction(
   }
 
   if (errorMessage || !saved) {
-    return { error: errorMessage ?? "Could not save profile" };
+    return { error: toUserSafeError(errorMessage, "Could not save profile") };
   }
 
   const profile = mapProfile(saved);

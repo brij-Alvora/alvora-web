@@ -1,8 +1,10 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
 
+import { formatDiscoverDate } from "@/lib/discover/format";
 import type { ReviewWithReviewer } from "@/lib/review/queries";
 import { hasProfileValue } from "@/lib/profile/presentation";
+import { ReportButton } from "@/components/reports/report-button";
 import { Card, CardContent } from "@/components/ui/card";
 
 type ReviewListProps = {
@@ -44,9 +46,7 @@ export function ReviewList({ reviews }: ReviewListProps) {
                     <p className="text-sm font-medium">{reviewerLabel(review)}</p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    {review.created_at
-                      ? new Date(review.created_at).toLocaleString()
-                      : ""}
+                    {formatDiscoverDate(review.created_at)}
                   </p>
                 </div>
                 <p className="inline-flex items-center gap-1 text-sm font-medium">
@@ -87,6 +87,7 @@ export function ReviewList({ reviews }: ReviewListProps) {
                   </p>
                 </section>
               ) : null}
+              <ReportButton targetType="review" targetId={review.id} />
             </CardContent>
           </Card>
         </li>

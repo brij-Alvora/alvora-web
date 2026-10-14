@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 
+import { safeNextPath } from "@/lib/auth/next-path";
+import { toUserSafeError } from "@/lib/errors/user-safe";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
 import { absoluteUrl } from "@/lib/utils";
@@ -23,6 +25,7 @@ export type ActionResult = {
 
 export async function loginAction(
   input: LoginInput,
+  next?: string,
 ): Promise<ActionResult> {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) {
@@ -36,16 +39,16 @@ export async function loginAction(
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: toUserSafeError(error, "Email or password is incorrect.") };
   }
 
   const profile = await getCurrentProfile();
-  if (profile?.account_status === "suspended") {
+  if (profile?.account_status === "banned") {
     await supabase.auth.signOut();
-    return { error: "This account is suspended." };
+    return { error: "This account is banned." };
   }
 
-  redirect("/dashboard");
+  redirect(safeNextPath(next));
 }
 
 export async function registerAction(
@@ -81,13 +84,13 @@ export async function registerAction(
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: toUserSafeError(error, "Could not create your account.") };
   }
 
   if (data.user && !data.session) {
     return {
       success:
-        "Check your email to confirm your account before signing in.",
+        "Check your email to confirm your account, then sign in.",
     };
   }
 
@@ -115,7 +118,7 @@ export async function forgotPasswordAction(
   );
 
   if (error) {
-    return { error: error.message };
+    return { error: toUserSafeError(error, "Could not send a reset email.") };
   }
 
   return {
@@ -137,8 +140,31 @@ export async function resetPasswordAction(
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: toUserSafeError(error, "Could not update your password.") };
   }
 
   redirect("/dashboard");
+}
+
+export async function resendConfirmationAction(
+  email: string,
+): Promise<ActionResult> {
+  const parsed = loginSchema.pick({ email: true }).safeParse({ email });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Enter a valid email" };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data.email,
+    options: { emailRedirectTo: absoluteUrl("/auth/callback") },
+  });
+  if (error) {
+    return {
+      error: toUserSafeError(error, "Could not resend confirmation email."),
+    };
+  }
+  return {
+    success: "If that email needs confirmation, a new link is on its way.",
+  };
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { toUserSafeError } from "@/lib/errors/user-safe";
 import { mapProfile } from "@/lib/profile/map-profile";
 import { awardProfileCompletedIfEligible } from "@/lib/reputation/award";
 import { getCurrentProfile as queryCurrentProfile } from "@/lib/profile/queries";
@@ -55,10 +56,10 @@ export async function uploadAvatarAction(
     admin = createAdminClient();
   } catch (error) {
     return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Server storage credentials are missing.",
+      error: toUserSafeError(
+        error,
+        "Photo upload is unavailable right now.",
+      ),
     };
   }
 
@@ -74,7 +75,7 @@ export async function uploadAvatarAction(
     });
 
   if (uploadError) {
-    return { error: uploadError.message };
+    return { error: toUserSafeError(uploadError, "Could not upload photo") };
   }
 
   const { data: publicUrlData } = admin.storage
@@ -145,7 +146,7 @@ export async function uploadAvatarAction(
   }
 
   if (errorMessage || !saved) {
-    return { error: errorMessage ?? "Could not save avatar" };
+    return { error: toUserSafeError(errorMessage, "Could not save avatar") };
   }
 
   const profile = mapProfile(saved);

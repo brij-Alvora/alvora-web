@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AdminFields } from "@/components/admin/admin-fields";
 import { UserActions } from "@/components/admin/user-actions";
+import { getAdminModerationActions } from "@/lib/admin/alerts";
 import {
   getAdminProjects,
   getAdminReputationEvents,
@@ -46,11 +47,12 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
     ),
   );
 
-  const [projects, validations, reviews, events] = await Promise.all([
+  const [projects, validations, reviews, events, actions] = await Promise.all([
     getAdminProjects(),
     getAdminValidations(),
     getAdminReviews(),
     getAdminReputationEvents(),
+    getAdminModerationActions("user", row.profile.id),
   ]);
 
   const ownedProjects = projects.filter((project) => owns(ids, project.owner_id));
@@ -136,6 +138,27 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
           meta: `${event.points} pts · ${formatDiscoverDate(event.created_at)}`,
         }))}
       />
+
+      <Card className="shadow-sm">
+        <CardContent className="space-y-3 p-5">
+          <h3 className="font-medium">Moderation log</h3>
+          {actions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No actions yet.</p>
+          ) : (
+            <ul className="divide-y divide-border text-sm">
+              {actions.map((action) => (
+                <li key={String(action.id)} className="py-2">
+                  <p className="font-medium">{String(action.action)}</p>
+                  <p className="text-muted-foreground">
+                    {action.reason ? `${String(action.reason)} · ` : ""}
+                    {formatDiscoverDate(String(action.created_at))}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       <Link
         href="/admin/users"

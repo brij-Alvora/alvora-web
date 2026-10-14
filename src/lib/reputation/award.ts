@@ -1,6 +1,8 @@
 import { revalidatePath } from "next/cache";
 
+import { createNotification } from "@/lib/notifications/create";
 import { getProfileCompletion } from "@/lib/profile/presentation";
+import { calculateReputation } from "@/lib/reputation/calculator";
 import {
   countUserEvents,
   insertReputationEvent,
@@ -28,9 +30,24 @@ export async function awardReputationEvent(input: {
   metadata?: ReputationMetadata;
 }): Promise<boolean> {
   try {
+    const before = await calculateReputation(input.userId);
     const result = await insertReputationEvent(input);
     if (result.error) return false;
-    if (result.created) revalidateReputation();
+    if (result.created) {
+      revalidateReputation();
+      const after = await calculateReputation(input.userId);
+      if (before.level !== after.level) {
+        await createNotification({
+          userId: input.userId,
+          type: "reputation_level_up",
+          title: `You reached ${after.level}`,
+          message: `Your reputation is now ${after.total_points} points.`,
+          href: "/reputation",
+          entityType: "user",
+          entityId: `level:${after.level}`,
+        });
+      }
+    }
     return result.created;
   } catch (error) {
     console.error(
@@ -61,12 +78,23 @@ export async function awardProjectPublished(
   userId: string,
   projectId: string,
 ): Promise<void> {
-  await awardReputationEvent({
+  const created = await awardReputationEvent({
     userId,
     eventType: "project_published",
     sourceId: projectId,
     metadata: { project_id: projectId },
   });
+  if (created) {
+    await createNotification({
+      userId,
+      type: "project_published",
+      title: "Project published",
+      message: "Your project is now live on Discover.",
+      href: "/projects",
+      entityType: "project",
+      entityId: projectId,
+    });
+  }
 
   const publishedCount = await countUserEvents(userId, "project_published");
   if (publishedCount < 1) return;
@@ -97,12 +125,23 @@ export async function awardValidationCompleted(
   validationId: string,
   projectId: string,
 ): Promise<void> {
-  await awardReputationEvent({
+  const created = await awardReputationEvent({
     userId,
     eventType: "validation_completed",
     sourceId: validationId,
     metadata: { validation_id: validationId, project_id: projectId },
   });
+  if (created) {
+    await createNotification({
+      userId,
+      type: "validation_completed",
+      title: "Validation completed",
+      message: "A validation request is now marked completed.",
+      href: `/validations/${validationId}`,
+      entityType: "validation_request",
+      entityId: validationId,
+    });
+  }
 }
 
 export async function awardReviewSubmitted(

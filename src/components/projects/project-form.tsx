@@ -89,6 +89,10 @@ export function ProjectForm({ project }: ProjectFormProps) {
           return;
         }
         setSuccess(result.success ?? "Saved");
+        if (result.project?.status === "published") {
+          router.push(`/project/${result.project.slug}`);
+          return;
+        }
         if (result.project && !project?.id) {
           router.replace(`/projects/${result.project.id}/edit`);
         }

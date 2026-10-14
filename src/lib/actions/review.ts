@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
+import { toUserSafeError } from "@/lib/errors/user-safe";
+import { createNotification } from "@/lib/notifications/create";
 import { awardReviewSubmitted } from "@/lib/reputation/award";
+import { assertCanContribute } from "@/lib/trust/account";
 import { mapReview } from "@/lib/review/map-review";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -46,6 +49,8 @@ export async function submitReviewAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "You must be signed in to submit a review" };
+  const blocked = await assertCanContribute(user.id);
+  if (blocked) return { error: blocked };
 
   const { data: requestRow, error: requestError } = await supabase
     .from("validation_requests")
@@ -57,7 +62,7 @@ export async function submitReviewAction(
     (requestRow ?? null) as Record<string, unknown> | null,
   );
   if (!request) {
-    return { error: requestError?.message ?? "Validation request not found" };
+    return { error: toUserSafeError(requestError, "Validation request not found") };
   }
 
   if (request.requested_by === user.id) {
@@ -113,7 +118,7 @@ export async function submitReviewAction(
 
   const review = mapReview(saved);
   if (!review) {
-    return { error: errorMessage ?? "Could not save review" };
+    return { error: toUserSafeError(errorMessage, "Could not save review") };
   }
 
   if (request.status === "open") {
@@ -139,7 +144,7 @@ export async function submitReviewAction(
 
   const { data: projectRow } = await supabase
     .from("projects")
-    .select("slug")
+    .select("slug, owner_id")
     .eq("id", request.project_id)
     .maybeSingle();
 
@@ -148,6 +153,25 @@ export async function submitReviewAction(
     review.id,
     request.id,
     request.project_id,
+  );
+
+  const recipients = new Set<string>();
+  if (request.requested_by !== user.id) recipients.add(request.requested_by);
+  const ownerId =
+    typeof projectRow?.owner_id === "string" ? projectRow.owner_id : null;
+  if (ownerId && ownerId !== user.id) recipients.add(ownerId);
+  await Promise.all(
+    [...recipients].map((recipientId) =>
+      createNotification({
+        userId: recipientId,
+        type: "review_received",
+        title: "Review received",
+        message: "A builder submitted a review on your validation request.",
+        href: `/validations/${request.id}`,
+        entityType: "review",
+        entityId: review.id,
+      }),
+    ),
   );
 
   revalidatePath("/dashboard");

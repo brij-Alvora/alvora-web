@@ -11,11 +11,14 @@ const LINKS = [
   { href: "/admin/projects", label: "Projects" },
   { href: "/admin/validations", label: "Validations" },
   { href: "/admin/reviews", label: "Reviews" },
+  { href: "/admin/reports", label: "Reports" },
+  { href: "/admin/support", label: "Support" },
+  { href: "/admin/alerts", label: "Alerts" },
   { href: "/admin/events", label: "Events" },
   { href: "/admin/analytics", label: "Analytics" },
 ];
 
-export function AdminNav() {
+export function AdminNav({ alertCount = 0 }: { alertCount?: number }) {
   const pathname = usePathname();
 
   return (
@@ -37,6 +40,11 @@ export function AdminNav() {
             )}
           >
             {link.label}
+            {link.href === "/admin/alerts" && alertCount > 0 ? (
+              <span className="ml-1 rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
+                {alertCount > 9 ? "9+" : alertCount}
+              </span>
+            ) : null}
           </Link>
         );
       })}

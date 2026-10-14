@@ -1,3 +1,4 @@
+import { formatDiscoverDate } from "@/lib/discover/format";
 import type { Profile } from "@/lib/supabase/types";
 
 const COMPLETION_FIELDS = [
@@ -27,13 +28,7 @@ export function getFirstName(
 }
 
 export function formatJoinedDate(isoDate: string): string {
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return isoDate;
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    year: "numeric",
-  }).format(date);
+  return formatDiscoverDate(isoDate) || isoDate;
 }
 
 export function getProfileCompletion(profile: Profile): {

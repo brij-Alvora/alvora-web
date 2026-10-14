@@ -6,6 +6,7 @@ import {
   resolveProfileGeography,
 } from "@/lib/geo/resolve";
 import { mapProfile } from "@/lib/profile/map-profile";
+import { getProfileCompletion } from "@/lib/profile/presentation";
 import { getProfilesByAuthIds } from "@/lib/profile/queries";
 import { mapProject } from "@/lib/project/map-project";
 import {
@@ -13,13 +14,17 @@ import {
   getReputationBand,
 } from "@/lib/reputation/rules";
 import { mapReputationEvent } from "@/lib/reputation/map-event";
+import { mapReport } from "@/lib/reports/map-report";
 import { mapReview } from "@/lib/review/map-review";
+import { mapSupportTicket } from "@/lib/support/map-ticket";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   Profile,
   Project,
+  Report,
   ReputationEvent,
   Review,
+  SupportTicket,
   ValidationRequest,
 } from "@/lib/supabase/types";
 import { mapValidationRequest } from "@/lib/validation/map-request";
@@ -76,6 +81,14 @@ export type AdminAnalytics = AdminCounts & {
     averageCompletionHours: number | null;
     sampleSize: number;
   };
+  platformHealth: {
+    profileCompletionPercent: number;
+    projectsWithValidationPercent: number;
+    validationCompletionPercent: number;
+    averageReviewsPerValidation: number;
+  };
+  mostActiveReviewers: RankedCount[];
+  mostValidatedProjects: RankedCount[];
   geography: {
     countries: number;
     cities: number;
@@ -217,11 +230,15 @@ export async function getAdminAnalytics(): Promise<AdminAnalytics> {
     getAdminUsers(),
     countAuthUsers(),
     admin.from("profiles").select("*"),
-    admin.from("projects").select("status, category, owner_id, created_at"),
+    admin
+      .from("projects")
+      .select("id, title, slug, status, category, owner_id, created_at"),
     admin
       .from("validation_requests")
-      .select("id, status, requested_by, created_at"),
-    admin.from("reviews").select("rating, reviewer_id, created_at"),
+      .select("id, status, requested_by, created_at, project_id"),
+    admin
+      .from("reviews")
+      .select("rating, reviewer_id, created_at, project_id, validation_request_id"),
     admin
       .from("reputation_events")
       .select("source_id, created_at")
@@ -254,6 +271,7 @@ export async function getAdminAnalytics(): Promise<AdminAnalytics> {
   const projectsByCategoryMap: Record<string, number> = {};
   const projectOwners = new Set<string>();
   const projectCreated: Array<Date | null> = [];
+  const projectTitles = new Map<string, string>();
   for (const row of projectRows.data ?? []) {
     increment(projectsByStatus, String(row.status ?? "unknown"));
     const category =
@@ -263,12 +281,22 @@ export async function getAdminAnalytics(): Promise<AdminAnalytics> {
     increment(projectsByCategoryMap, category);
     if (typeof row.owner_id === "string") projectOwners.add(row.owner_id);
     projectCreated.push(asDate(row.created_at));
+    if (typeof row.id === "string") {
+      projectTitles.set(
+        row.id,
+        typeof row.title === "string" && row.title.trim()
+          ? row.title.trim()
+          : row.id,
+      );
+    }
   }
 
   const validationsByStatus: Record<string, number> = {};
   const validators = new Set<string>();
   const requestCreated: Array<Date | null> = [];
   const requestCreatedById = new Map<string, Date>();
+  const validationsByProject: Record<string, number> = {};
+  const projectsWithValidation = new Set<string>();
   for (const row of requestRows.data ?? []) {
     const status = String(row.status ?? "unknown");
     increment(validationsByStatus, status);
@@ -278,16 +306,43 @@ export async function getAdminAnalytics(): Promise<AdminAnalytics> {
     if (typeof row.id === "string" && created) {
       requestCreatedById.set(row.id, created);
     }
+    if (typeof row.project_id === "string") {
+      increment(validationsByProject, row.project_id);
+      projectsWithValidation.add(row.project_id);
+    }
   }
 
   const reviewsByRating: Record<string, number> = {};
   const reviewers = new Set<string>();
   const reviewCreated: Array<Date | null> = [];
+  const reviewsByReviewer: Record<string, number> = {};
+  let reviewsOnRequests = 0;
   for (const row of reviewRows.data ?? []) {
     increment(reviewsByRating, String(row.rating ?? "unrated"));
-    if (typeof row.reviewer_id === "string") reviewers.add(row.reviewer_id);
+    if (typeof row.reviewer_id === "string") {
+      reviewers.add(row.reviewer_id);
+      increment(reviewsByReviewer, row.reviewer_id);
+    }
     reviewCreated.push(asDate(row.created_at));
+    if (typeof row.validation_request_id === "string" && row.validation_request_id) {
+      reviewsOnRequests += 1;
+    }
   }
+
+  const profilePercents = (profileRows.data ?? [])
+    .map((raw) => mapProfile(raw as Record<string, unknown>))
+    .filter((row) => row !== null)
+    .map((profile) => getProfileCompletion(profile).percent);
+  const profileCompletionPercent =
+    profilePercents.length === 0
+      ? 0
+      : Math.round(
+          profilePercents.reduce((sum, value) => sum + value, 0) /
+            profilePercents.length,
+        );
+  const projectCount = (projectRows.data ?? []).length;
+  const requestCount = (requestRows.data ?? []).length;
+  const completedCount = validationsByStatus.completed ?? 0;
 
   const completionMs: number[] = [];
   for (const row of completionEvents.data ?? []) {
@@ -379,6 +434,39 @@ export async function getAdminAnalytics(): Promise<AdminAnalytics> {
       withLocation,
       unspecified: (profileRows.data ?? []).length - withLocation,
     },
+    platformHealth: {
+      profileCompletionPercent,
+      projectsWithValidationPercent:
+        projectCount === 0
+          ? 0
+          : Math.round((projectsWithValidation.size / projectCount) * 100),
+      validationCompletionPercent:
+        requestCount === 0
+          ? 0
+          : Math.round((completedCount / requestCount) * 100),
+      averageReviewsPerValidation:
+        requestCount === 0
+          ? 0
+          : Math.round((reviewsOnRequests / requestCount) * 10) / 10,
+    },
+    mostActiveReviewers: toRanked(reviewsByReviewer)
+      .slice(0, 8)
+      .map((row) => {
+        const match = users.find(
+          (user) =>
+            user.profile.user_id === row.label || user.profile.id === row.label,
+        );
+        const name = match
+          ? match.profile.full_name?.trim() || `@${match.profile.username}`
+          : row.label.slice(0, 8);
+        return { label: name, value: row.value };
+      }),
+    mostValidatedProjects: toRanked(validationsByProject)
+      .slice(0, 8)
+      .map((row) => ({
+        label: projectTitles.get(row.label) ?? row.label,
+        value: row.value,
+      })),
   };
 }
 
@@ -548,4 +636,58 @@ export async function getAdminReputationEvents(): Promise<ReputationEvent[]> {
   return data
     .map((row) => mapReputationEvent(row as Record<string, unknown>))
     .filter((row): row is ReputationEvent => row !== null);
+}
+
+export async function getAdminReports(): Promise<Report[]> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("reports")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error || !data) return [];
+    return data
+      .map((row) => mapReport(row as Record<string, unknown>))
+      .filter((row): row is Report => row !== null);
+  } catch {
+    return [];
+  }
+}
+
+export async function getAdminSupportTickets(): Promise<SupportTicket[]> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("support_tickets")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error || !data) return [];
+    return data
+      .map((row) => mapSupportTicket(row as Record<string, unknown>))
+      .filter((row): row is SupportTicket => row !== null);
+  } catch {
+    return [];
+  }
+}
+
+export async function getClosedSupportTickets(): Promise<SupportTicket[]> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("support_tickets")
+      .select("*")
+      .in("status", ["resolved", "closed"])
+      .order("updated_at", { ascending: false });
+    const rows = !error && data ? data : null;
+    if (!rows) {
+      return (await getAdminSupportTickets()).filter(
+        (ticket) => ticket.status === "resolved" || ticket.status === "closed",
+      );
+    }
+    return rows
+      .map((row) => mapSupportTicket(row as Record<string, unknown>))
+      .filter((row): row is SupportTicket => row !== null);
+  } catch {
+    return [];
+  }
 }

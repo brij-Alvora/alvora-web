@@ -12,8 +12,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm() {
-  const [error, setError] = useState<string | null>(null);
+const CALLBACK_ERRORS: Record<string, string> = {
+  auth_callback_failed:
+    "That confirmation link is invalid or expired. Sign in, or request a new email.",
+  banned: "This account is banned.",
+};
+
+type LoginFormProps = {
+  nextPath?: string;
+  initialError?: string;
+};
+
+export function LoginForm({ nextPath, initialError }: LoginFormProps) {
+  const [error, setError] = useState<string | null>(
+    initialError ? (CALLBACK_ERRORS[initialError] ?? initialError) : null,
+  );
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -27,7 +40,7 @@ export function LoginForm() {
   const onSubmit = (values: LoginInput) => {
     setError(null);
     startTransition(async () => {
-      const result = await loginAction(values);
+      const result = await loginAction(values, nextPath);
       if (result?.error) setError(result.error);
     });
   };

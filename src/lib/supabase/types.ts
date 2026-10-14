@@ -12,7 +12,7 @@ export type Json =
   | Json[];
 
 export type UserRole = "user" | "admin";
-export type AccountStatus = "active" | "suspended";
+export type AccountStatus = "active" | "warned" | "suspended" | "banned";
 export type ModerationStatus = "visible" | "hidden" | "flagged";
 
 export type Profile = {
@@ -190,6 +190,207 @@ export type ReputationEventUpdate = Partial<
   Omit<ReputationEventInsert, "id" | "user_id">
 >;
 
+export type NotificationTypeName =
+  | "review_received"
+  | "validation_completed"
+  | "reputation_level_up"
+  | "project_published"
+  | "support_ticket_updated"
+  | "support_ticket_resolved"
+  | "account_warned";
+
+export type NotificationEntityType =
+  | "user"
+  | "project"
+  | "review"
+  | "validation_request"
+  | "support_ticket";
+
+export type AppNotification = {
+  id: string;
+  user_id: string;
+  type: NotificationTypeName;
+  title: string;
+  message: string | null;
+  body: string | null;
+  href: string | null;
+  entity_type: NotificationEntityType | null;
+  entity_id: string | null;
+  source_id: string | null;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+};
+
+export type AppNotificationInsert = {
+  id?: string;
+  user_id: string;
+  type: NotificationTypeName;
+  title: string;
+  message?: string | null;
+  body?: string | null;
+  href?: string | null;
+  entity_type?: NotificationEntityType | null;
+  entity_id?: string | null;
+  source_id?: string | null;
+  is_read?: boolean;
+  read_at?: string | null;
+  created_at?: string;
+};
+
+export type AppNotificationUpdate = Partial<
+  Omit<AppNotificationInsert, "id" | "user_id">
+>;
+
+export type ReportTargetTypeName =
+  | "user"
+  | "project"
+  | "validation_request"
+  | "review";
+
+export type ReportStatus =
+  | "open"
+  | "under_review"
+  | "resolved"
+  | "dismissed";
+
+export type Report = {
+  id: string;
+  reporter_id: string;
+  entity_type: ReportTargetTypeName;
+  entity_id: string;
+  target_type: ReportTargetTypeName;
+  target_id: string;
+  reason: string;
+  description: string | null;
+  details: string | null;
+  status: ReportStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ReportInsert = {
+  id?: string;
+  reporter_id: string;
+  entity_type?: ReportTargetTypeName;
+  entity_id?: string;
+  target_type: ReportTargetTypeName;
+  target_id: string;
+  reason: string;
+  description?: string | null;
+  details?: string | null;
+  status?: ReportStatus;
+  admin_notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type ReportUpdate = Partial<Omit<ReportInsert, "id" | "reporter_id">>;
+
+export type SupportCategoryName =
+  | "account"
+  | "project"
+  | "validation"
+  | "review"
+  | "bug_report"
+  | "feature_request"
+  | "contact_founder";
+
+export type SupportPriority = "low" | "medium" | "high" | "critical";
+
+export type SupportTicketStatus = "open" | "assigned" | "resolved" | "closed";
+
+export type SupportTicket = {
+  id: string;
+  user_id: string;
+  category: SupportCategoryName;
+  priority: SupportPriority;
+  subject: string;
+  message: string;
+  description: string | null;
+  status: SupportTicketStatus;
+  admin_reply: string | null;
+  assigned_admin_id: string | null;
+  first_response_at: string | null;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupportTicketInsert = {
+  id?: string;
+  user_id: string;
+  category: SupportCategoryName;
+  priority?: SupportPriority;
+  subject: string;
+  message: string;
+  description?: string | null;
+  status?: SupportTicketStatus;
+  admin_reply?: string | null;
+  assigned_admin_id?: string | null;
+  first_response_at?: string | null;
+  closed_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type SupportTicketUpdate = Partial<
+  Omit<SupportTicketInsert, "id" | "user_id">
+>;
+
+export type ModerationAction = {
+  id: string;
+  admin_id: string;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  reason: string | null;
+  created_at: string;
+};
+
+export type ModerationActionInsert = {
+  id?: string;
+  admin_id: string;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  reason?: string | null;
+  created_at?: string;
+};
+
+export type ModerationActionUpdate = Partial<
+  Omit<ModerationActionInsert, "id" | "admin_id">
+>;
+
+export type AdminAlertSeverity = "info" | "warning" | "critical";
+
+export type AdminAlert = {
+  id: string;
+  type: string;
+  severity: AdminAlertSeverity;
+  title: string;
+  message: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type AdminAlertInsert = {
+  id?: string;
+  type: string;
+  severity?: AdminAlertSeverity;
+  title: string;
+  message?: string | null;
+  entity_type?: string | null;
+  entity_id?: string | null;
+  is_read?: boolean;
+  created_at?: string;
+};
+
+export type AdminAlertUpdate = Partial<Omit<AdminAlertInsert, "id">>;
+
 export type Database = {
   public: {
     Tables: {
@@ -253,6 +454,36 @@ export type Database = {
         Row: ReputationEvent;
         Insert: ReputationEventInsert;
         Update: ReputationEventUpdate;
+        Relationships: [];
+      };
+      notifications: {
+        Row: AppNotification;
+        Insert: AppNotificationInsert;
+        Update: AppNotificationUpdate;
+        Relationships: [];
+      };
+      reports: {
+        Row: Report;
+        Insert: ReportInsert;
+        Update: ReportUpdate;
+        Relationships: [];
+      };
+      support_tickets: {
+        Row: SupportTicket;
+        Insert: SupportTicketInsert;
+        Update: SupportTicketUpdate;
+        Relationships: [];
+      };
+      moderation_actions: {
+        Row: ModerationAction;
+        Insert: ModerationActionInsert;
+        Update: ModerationActionUpdate;
+        Relationships: [];
+      };
+      admin_alerts: {
+        Row: AdminAlert;
+        Insert: AdminAlertInsert;
+        Update: AdminAlertUpdate;
         Relationships: [];
       };
     };

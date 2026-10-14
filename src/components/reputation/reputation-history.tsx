@@ -1,3 +1,4 @@
+import { formatDiscoverDate } from "@/lib/discover/format";
 import {
   REPUTATION_EVENT_LABELS,
   isReputationEventType,
@@ -46,9 +47,7 @@ export function ReputationHistory({ events }: ReputationHistoryProps) {
                   +{event.points}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground sm:px-5">
-                  {event.created_at
-                    ? new Date(event.created_at).toLocaleString()
-                    : ""}
+                  {formatDiscoverDate(event.created_at)}
                 </td>
               </tr>
             ))}

@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
+import { toUserSafeError } from "@/lib/errors/user-safe";
 import { getAccessibleProject } from "@/lib/project/queries";
+import { assertCanContribute } from "@/lib/trust/account";
 import {
   awardValidationCompleted,
   awardValidationCreated,
@@ -42,6 +44,8 @@ export async function createValidationRequestAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "You must be signed in to request validation" };
+  const blocked = await assertCanContribute(user.id);
+  if (blocked) return { error: blocked };
 
   const project = await getAccessibleProject(parsed.data.project_id);
   if (!project) {
@@ -84,7 +88,9 @@ export async function createValidationRequestAction(
 
   const request = mapValidationRequest(saved);
   if (!request) {
-    return { error: errorMessage ?? "Could not create validation request" };
+    return {
+      error: toUserSafeError(errorMessage, "Could not create validation request"),
+    };
   }
 
   await awardValidationCreated(user.id, request.id, request.project_id);
@@ -110,7 +116,7 @@ export async function updateValidationStatusAction(
     .maybeSingle();
 
   if (loadError || !existing) {
-    return { error: loadError?.message ?? "Request not found" };
+    return { error: toUserSafeError(loadError, "Request not found") };
   }
 
   const current = mapValidationRequest(existing as Record<string, unknown>);
@@ -152,7 +158,9 @@ export async function updateValidationStatusAction(
   }
 
   const request = mapValidationRequest(saved);
-  if (!request) return { error: error?.message ?? "Could not update status" };
+  if (!request) {
+    return { error: toUserSafeError(error, "Could not update status") };
+  }
 
   if (request.status === "completed") {
     await awardValidationCompleted(

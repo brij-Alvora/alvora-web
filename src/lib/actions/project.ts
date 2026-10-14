@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
+import { toUserSafeError } from "@/lib/errors/user-safe";
 import { mapProject } from "@/lib/project/map-project";
+import { assertCanContribute } from "@/lib/trust/account";
 import { awardProjectPublished } from "@/lib/reputation/award";
 import { slugifyTitle, uniqueSlug } from "@/lib/project/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -105,6 +107,8 @@ export async function saveProjectAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "You must be signed in to save a project" };
+  const blocked = await assertCanContribute(user.id);
+  if (blocked) return { error: blocked };
 
   const existingId = String(formData.get("id") ?? "");
   const values = normalizeProjectValues(parsed.data);
@@ -190,7 +194,7 @@ export async function saveProjectAction(
 
   let project = mapProject(saved);
   if (!project) {
-    return { error: errorMessage ?? "Could not save project" };
+    return { error: toUserSafeError(errorMessage, "Could not save project") };
   }
 
   if (file instanceof File && file.size > 0) {
@@ -238,6 +242,8 @@ export async function setProjectStatusAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "You must be signed in" };
+  const blocked = await assertCanContribute(user.id);
+  if (blocked) return { error: blocked };
 
   const { data, error } = await supabase
     .from("projects")
@@ -252,7 +258,9 @@ export async function setProjectStatusAction(
     .maybeSingle();
 
   const project = mapProject((data ?? null) as Record<string, unknown> | null);
-  if (!project) return { error: error?.message ?? "Could not update status" };
+  if (!project) {
+    return { error: toUserSafeError(error, "Could not update status") };
+  }
 
   if (project.status === "published") {
     await awardProjectPublished(user.id, project.id);
@@ -288,7 +296,7 @@ export async function deleteProjectAction(
     .eq("id", projectId)
     .eq("owner_id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: toUserSafeError(error, "Could not delete project") };
 
   revalidatePath("/dashboard");
   revalidatePath("/projects");

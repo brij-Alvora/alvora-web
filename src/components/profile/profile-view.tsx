@@ -2,7 +2,9 @@ import { Code2, ExternalLink, Globe, MapPin } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
+import { DiscoverProjectCard } from "@/components/discover/discover-project-card";
 import { RecentAchievements } from "@/components/reputation/recent-achievements";
+import type { DiscoverProject } from "@/lib/discover/queries";
 import type { ReputationSnapshot } from "@/lib/reputation/calculator";
 import type { Profile } from "@/lib/supabase/types";
 import {
@@ -12,12 +14,15 @@ import {
   hasProfileValue,
 } from "@/lib/profile/presentation";
 import { getInitials } from "@/lib/utils";
+import { ReportButton } from "@/components/reports/report-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 
 type ProfileViewProps = {
   profile: Profile;
   reputation: ReputationSnapshot;
+  projects?: DiscoverProject[];
+  isOwner?: boolean;
 };
 
 type ProfileLink = {
@@ -27,7 +32,12 @@ type ProfileLink = {
   icon: LucideIcon;
 };
 
-export function ProfileView({ profile, reputation }: ProfileViewProps) {
+export function ProfileView({
+  profile,
+  reputation,
+  projects = [],
+  isOwner = false,
+}: ProfileViewProps) {
   const displayName = hasProfileValue(profile.full_name)
     ? profile.full_name
     : profile.username;
@@ -99,6 +109,10 @@ export function ProfileView({ profile, reputation }: ProfileViewProps) {
                 <span>{profile.location}</span>
               </p>
             ) : null}
+            <ReportButton
+              targetType="user"
+              targetId={profile.user_id ?? profile.id}
+            />
           </header>
         </div>
       </Card>
@@ -132,6 +146,21 @@ export function ProfileView({ profile, reputation }: ProfileViewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {projects.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold tracking-tight">Projects</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {projects.map((project) => (
+              <DiscoverProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+          No published projects yet.
+        </p>
+      )}
 
       {hasProfileValue(profile.bio) ? (
         <Card className="shadow-sm">
@@ -190,6 +219,7 @@ export function ProfileView({ profile, reputation }: ProfileViewProps) {
           </div>
           ) : null}
 
+          {isOwner ? (
           <div>
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -216,6 +246,7 @@ export function ProfileView({ profile, reputation }: ProfileViewProps) {
               {completion.filled} of {completion.total} identity fields filled
             </p>
           </div>
+          ) : null}
         </CardContent>
       </Card>
       ) : null}

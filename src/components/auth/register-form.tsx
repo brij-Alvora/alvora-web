@@ -5,7 +5,10 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { registerAction } from "@/lib/actions/auth";
+import {
+  registerAction,
+  resendConfirmationAction,
+} from "@/lib/actions/auth";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -20,9 +23,11 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
+    defaultValues: { acceptedLegal: false },
   });
 
   const onSubmit = (values: RegisterInput) => {
@@ -110,9 +115,63 @@ export function RegisterForm() {
         )}
       </div>
 
+      <div className="space-y-2">
+        <label className="flex items-start gap-2 text-sm leading-5">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 rounded border-input"
+            {...register("acceptedLegal")}
+          />
+          <span>
+            I agree to the{" "}
+            <Link href="/terms" className="underline underline-offset-4">
+              Terms
+            </Link>
+            ,{" "}
+            <Link href="/privacy" className="underline underline-offset-4">
+              Privacy Policy
+            </Link>
+            , and{" "}
+            <Link href="/acceptable-use" className="underline underline-offset-4">
+              Acceptable Use Policy
+            </Link>
+            .
+          </span>
+        </label>
+        {errors.acceptedLegal && (
+          <p className="text-sm text-destructive">
+            {errors.acceptedLegal.message}
+          </p>
+        )}
+      </div>
+
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? "Creating account..." : "Create account"}
       </Button>
+
+      {success ? (
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button asChild variant="outline" className="flex-1">
+            <Link href="/login">Sign in</Link>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="flex-1"
+            disabled={isPending}
+            onClick={() => {
+              const email = getValues("email");
+              startTransition(async () => {
+                const result = await resendConfirmationAction(email);
+                if (result.error) setError(result.error);
+                if (result.success) setSuccess(result.success);
+              });
+            }}
+          >
+            Resend email
+          </Button>
+        </div>
+      ) : null}
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}

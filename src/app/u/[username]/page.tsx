@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProfileView } from "@/components/profile/profile-view";
-import { getProfileByUsername } from "@/lib/profile/queries";
+import { getCurrentProfile, getProfileByUsername } from "@/lib/profile/queries";
+import { getPublishedProjectsByOwner } from "@/lib/project/queries";
 import { calculateReputation } from "@/lib/reputation/calculator";
+import type { DiscoverProject } from "@/lib/discover/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -38,13 +40,30 @@ export default async function PublicProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  const reputation = await calculateReputation(
-    profile.user_id ?? profile.id,
-  );
+  const ownerId = profile.user_id ?? profile.id;
+  const [reputation, published, current] = await Promise.all([
+    calculateReputation(ownerId),
+    getPublishedProjectsByOwner(ownerId),
+    getCurrentProfile(),
+  ]);
+
+  const projects: DiscoverProject[] = published.map((project) => ({
+    ...project,
+    builder: profile,
+  }));
+  const isOwner =
+    current?.id === profile.id ||
+    current?.user_id === ownerId ||
+    current?.id === ownerId;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-      <ProfileView profile={profile} reputation={reputation} />
+      <ProfileView
+        profile={profile}
+        reputation={reputation}
+        projects={projects}
+        isOwner={Boolean(isOwner)}
+      />
     </div>
   );
 }

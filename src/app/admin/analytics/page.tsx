@@ -60,6 +60,44 @@ export default async function AdminAnalyticsPage() {
 
       <section className="space-y-3">
         <h3 className="text-base font-semibold tracking-tight">
+          Platform health
+        </h3>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <SummaryCard
+            label="Profile Completion %"
+            value={analytics.platformHealth.profileCompletionPercent}
+          />
+          <SummaryCard
+            label="Projects with Validation %"
+            value={analytics.platformHealth.projectsWithValidationPercent}
+          />
+          <SummaryCard
+            label="Validation Completion %"
+            value={analytics.platformHealth.validationCompletionPercent}
+          />
+          <SummaryCard
+            label="Average Reviews per Validation"
+            value={analytics.platformHealth.averageReviewsPerValidation}
+          />
+        </div>
+        <div className="grid gap-3 lg:grid-cols-2">
+          <RankingList
+            title="Most active reviewers"
+            items={analytics.mostActiveReviewers}
+            emptyLabel="No reviewers yet."
+            hrefFor={() => "/admin/reviews"}
+          />
+          <RankingList
+            title="Most validated projects"
+            items={analytics.mostValidatedProjects}
+            emptyLabel="No validation requests yet."
+            hrefFor={() => "/admin/projects"}
+          />
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-base font-semibold tracking-tight">
           Validation analytics
         </h3>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

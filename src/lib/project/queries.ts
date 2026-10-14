@@ -85,6 +85,20 @@ export async function getAccessibleProject(
   return project;
 }
 
+export async function getPublishedProjectsByOwner(
+  ownerId: string,
+): Promise<Project[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("owner_id", ownerId)
+    .eq("status", "published")
+    .order("published_at", { ascending: false, nullsFirst: false });
+  if (error || !data) return [];
+  return mapRows(data);
+}
+
 export async function getRecentPublishedProjects(
   limit = 8,
 ): Promise<Project[]> {

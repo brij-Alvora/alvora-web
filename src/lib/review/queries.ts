@@ -47,6 +47,7 @@ export async function getReviewsForValidationRequest(
     .select("*")
     .eq("validation_request_id", validationRequestId)
     .neq("moderation_status", "hidden")
+    .neq("moderation_status", "flagged")
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];

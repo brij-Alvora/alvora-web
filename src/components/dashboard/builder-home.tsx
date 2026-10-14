@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { FirstRun } from "@/components/onboarding/first-run";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ReputationCard } from "@/components/reputation/reputation-card";
 import { ValidationRequestList } from "@/components/validation/validation-request-list";
@@ -89,6 +90,16 @@ export function BuilderHome({
           <p className="text-sm text-muted-foreground">@{profile.username}</p>
         ) : null}
       </section>
+
+      <FirstRun
+        profilePercent={completion.percent}
+        hasPublishedProject={projects.some(
+          (project) => project.status === "published",
+        )}
+        hasValidationOrReview={
+          stats.validationRequests > 0 || stats.reviewsSubmitted > 0
+        }
+      />
 
       <Card className="shadow-sm">
         <CardContent className="flex flex-col gap-6 p-5 sm:flex-row sm:items-center sm:p-6">

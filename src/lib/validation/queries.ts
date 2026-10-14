@@ -98,7 +98,7 @@ export async function getOpenValidationRequests(
   const { data, error } = await supabase
     .from("validation_requests")
     .select("*")
-    .eq("status", "open")
+    .in("status", ["open", "in_review"])
     .order("created_at", { ascending: false })
     .limit(limit);
 
