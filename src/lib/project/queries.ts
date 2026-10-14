@@ -85,6 +85,33 @@ export async function getAccessibleProject(
   return project;
 }
 
+export async function getRecentPublishedProjects(
+  limit = 8,
+): Promise<Project[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("status", "published")
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return mapRows(data);
+}
+
+export async function getProjectsByIds(ids: string[]): Promise<Project[]> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (unique.length === 0) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .in("id", unique);
+  if (error || !data) return [];
+  return mapRows(data);
+}
+
 export async function countOwnerProjects(userId: string): Promise<number> {
   const supabase = await createClient();
   const { count, error } = await supabase

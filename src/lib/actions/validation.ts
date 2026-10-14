@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 
 import { getAccessibleProject } from "@/lib/project/queries";
+import {
+  awardValidationCompleted,
+  awardValidationCreated,
+} from "@/lib/reputation/award";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ValidationRequest, ValidationStatus } from "@/lib/supabase/types";
@@ -83,6 +87,8 @@ export async function createValidationRequestAction(
     return { error: errorMessage ?? "Could not create validation request" };
   }
 
+  await awardValidationCreated(user.id, request.id, request.project_id);
+
   revalidateValidationSurfaces(request, project.slug);
   return { success: "Validation request created", request };
 }
@@ -147,6 +153,14 @@ export async function updateValidationStatusAction(
 
   const request = mapValidationRequest(saved);
   if (!request) return { error: error?.message ?? "Could not update status" };
+
+  if (request.status === "completed") {
+    await awardValidationCompleted(
+      request.requested_by,
+      request.id,
+      request.project_id,
+    );
+  }
 
   revalidateValidationSurfaces(request, projectRow?.slug);
   return { success: "Status updated", request };

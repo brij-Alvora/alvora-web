@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { mapProfile } from "@/lib/profile/map-profile";
+import { awardProfileCompletedIfEligible } from "@/lib/reputation/award";
 import {
   getCurrentProfile as queryCurrentProfile,
   getProfileByUsername as queryProfileByUsername,
@@ -114,6 +115,8 @@ export async function upsertProfileAction(
   if (!profile) {
     return { error: "Profile saved but could not be read back" };
   }
+
+  await awardProfileCompletedIfEligible(user.id, profile);
 
   revalidatePath("/dashboard");
   revalidatePath("/profile/edit");

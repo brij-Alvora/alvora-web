@@ -51,3 +51,26 @@ export async function getProfileByAuthId(
   if (byUserId) return byUserId;
   return fetchProfileWhere({ id: userId });
 }
+
+export async function getProfilesByAuthIds(
+  userIds: string[],
+): Promise<Map<string, Profile>> {
+  const ids = [...new Set(userIds.filter(Boolean))];
+  const byAuthId = new Map<string, Profile>();
+  if (ids.length === 0) return byAuthId;
+
+  const supabase = await createClient();
+  const [{ data: byUserId }, { data: byId }] = await Promise.all([
+    supabase.from("profiles").select("*").in("user_id", ids),
+    supabase.from("profiles").select("*").in("id", ids),
+  ]);
+
+  for (const row of [...(byUserId ?? []), ...(byId ?? [])]) {
+    const profile = mapProfile(row as Record<string, unknown>);
+    if (!profile) continue;
+    if (profile.user_id) byAuthId.set(profile.user_id, profile);
+    byAuthId.set(profile.id, profile);
+  }
+
+  return byAuthId;
+}

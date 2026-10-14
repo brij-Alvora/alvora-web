@@ -91,6 +91,35 @@ export async function getValidationRequestsOnMyProjects(): Promise<
   return attachProjects(mapRows(data));
 }
 
+export async function getOpenValidationRequests(
+  limit = 8,
+): Promise<ValidationRequestWithProject[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("validation_requests")
+    .select("*")
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return attachProjects(mapRows(data));
+}
+
+export async function getValidationRequestsByIds(
+  ids: string[],
+): Promise<ValidationRequest[]> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (unique.length === 0) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("validation_requests")
+    .select("*")
+    .in("id", unique);
+  if (error || !data) return [];
+  return mapRows(data);
+}
+
 export async function getReviewableValidationRequests(): Promise<
   ValidationRequestWithProject[]
 > {

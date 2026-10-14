@@ -20,17 +20,23 @@ export async function SiteHeader() {
           Alvora
         </Link>
 
-        <nav className="flex items-center gap-2">
+        <nav className="flex max-w-[70%] items-center gap-1 overflow-x-auto sm:max-w-none sm:gap-2">
           {user ? (
             <>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/dashboard">Home</Link>
               </Button>
               <Button asChild variant="ghost" size="sm">
+                <Link href="/discover">Discover</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
                 <Link href="/projects">Projects</Link>
               </Button>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/validations">Validate</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/reputation">Reputation</Link>
               </Button>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/profile/edit">Profile</Link>

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { awardReviewSubmitted } from "@/lib/reputation/award";
 import { mapReview } from "@/lib/review/map-review";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -141,6 +142,13 @@ export async function submitReviewAction(
     .select("slug")
     .eq("id", request.project_id)
     .maybeSingle();
+
+  await awardReviewSubmitted(
+    user.id,
+    review.id,
+    request.id,
+    request.project_id,
+  );
 
   revalidatePath("/dashboard");
   revalidatePath("/validations");

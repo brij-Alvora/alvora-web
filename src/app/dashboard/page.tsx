@@ -25,7 +25,7 @@ export default async function DashboardPage() {
 
   const profile = await getCurrentProfile();
   const [stats, projects, validationRequests] = await Promise.all([
-    getBuilderStats(profile, user.id),
+    getBuilderStats(user.id),
     getMyProjects(),
     getMyValidationRequests(),
   ]);

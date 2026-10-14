@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { mapProfile } from "@/lib/profile/map-profile";
+import { awardProfileCompletedIfEligible } from "@/lib/reputation/award";
 import { getCurrentProfile as queryCurrentProfile } from "@/lib/profile/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -151,6 +152,8 @@ export async function uploadAvatarAction(
   if (!profile) {
     return { error: "Avatar uploaded but profile could not be read back" };
   }
+
+  await awardProfileCompletedIfEligible(user.id, profile);
 
   revalidatePath("/dashboard");
   revalidatePath("/profile/edit");

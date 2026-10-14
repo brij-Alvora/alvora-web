@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { mapProject } from "@/lib/project/map-project";
+import { awardProjectPublished } from "@/lib/reputation/award";
 import { slugifyTitle, uniqueSlug } from "@/lib/project/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -216,6 +217,10 @@ export async function saveProjectAction(
     }
   }
 
+  if (project.status === "published") {
+    await awardProjectPublished(user.id, project.id);
+  }
+
   await revalidateProjectSurfaces(project);
   return {
     success:
@@ -248,6 +253,10 @@ export async function setProjectStatusAction(
 
   const project = mapProject((data ?? null) as Record<string, unknown> | null);
   if (!project) return { error: error?.message ?? "Could not update status" };
+
+  if (project.status === "published") {
+    await awardProjectPublished(user.id, project.id);
+  }
 
   await revalidateProjectSurfaces(project);
   return { success: `Project ${status}`, project };

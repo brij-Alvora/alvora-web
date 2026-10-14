@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ProfileView } from "@/components/profile/profile-view";
 import { getProfileByUsername } from "@/lib/profile/queries";
+import { calculateReputation } from "@/lib/reputation/calculator";
 
 export const dynamic = "force-dynamic";
 
@@ -37,9 +38,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
     notFound();
   }
 
+  const reputation = await calculateReputation(
+    profile.user_id ?? profile.id,
+  );
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-      <ProfileView profile={profile} />
+      <ProfileView profile={profile} reputation={reputation} />
     </div>
   );
 }

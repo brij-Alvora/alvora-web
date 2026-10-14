@@ -5,11 +5,11 @@ import {
   Pencil,
   Send,
   ShieldCheck,
-  Star,
 } from "lucide-react";
 import Link from "next/link";
 
 import { ProjectCard } from "@/components/projects/project-card";
+import { ReputationCard } from "@/components/reputation/reputation-card";
 import { ValidationRequestList } from "@/components/validation/validation-request-list";
 import type { BuilderStats } from "@/lib/dashboard/stats";
 import type { Profile } from "@/lib/supabase/types";
@@ -70,11 +70,6 @@ export function BuilderHome({
       label: "Reviews submitted",
       value: stats.reviewsSubmitted,
       icon: Send,
-    },
-    {
-      label: "Reputation",
-      value: stats.reputation,
-      icon: Star,
     },
   ];
 
@@ -167,7 +162,7 @@ export function BuilderHome({
             Activity across projects, validation, and reputation.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {statItems.map((item) => (
             <Card key={item.label} className="shadow-sm">
               <CardContent className="p-4 sm:p-5">
@@ -186,6 +181,23 @@ export function BuilderHome({
             </Card>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">Reputation</h2>
+          <p className="text-sm text-muted-foreground">
+            Score and level are calculated from reputation events.
+          </p>
+        </div>
+        <ReputationCard
+          totalPoints={stats.reputation.total_points}
+          level={stats.reputation.level}
+          nextLevel={stats.reputation.next_level}
+          progress={stats.reputation.progress}
+          recentEvent={stats.reputation.events[0] ?? null}
+          showHistoryLink
+        />
       </section>
 
       <section className="space-y-3">

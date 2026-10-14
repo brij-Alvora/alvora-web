@@ -152,6 +152,30 @@ export type ReviewInsert = {
 
 export type ReviewUpdate = Partial<Omit<ReviewInsert, "id" | "reviewer_id">>;
 
+export type ReputationEvent = {
+  id: string;
+  user_id: string;
+  event_type: string;
+  points: number;
+  source_id: string | null;
+  metadata: Json | null;
+  created_at: string;
+};
+
+export type ReputationEventInsert = {
+  id?: string;
+  user_id: string;
+  event_type: string;
+  points: number;
+  source_id?: string | null;
+  metadata?: Json | null;
+  created_at?: string;
+};
+
+export type ReputationEventUpdate = Partial<
+  Omit<ReputationEventInsert, "id" | "user_id">
+>;
+
 export type Database = {
   public: {
     Tables: {
@@ -210,6 +234,12 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      reputation_events: {
+        Row: ReputationEvent;
+        Insert: ReputationEventInsert;
+        Update: ReputationEventUpdate;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

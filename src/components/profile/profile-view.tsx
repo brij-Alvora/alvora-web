@@ -2,6 +2,8 @@ import { Code2, ExternalLink, Globe, MapPin } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
+import { RecentAchievements } from "@/components/reputation/recent-achievements";
+import type { ReputationSnapshot } from "@/lib/reputation/calculator";
 import type { Profile } from "@/lib/supabase/types";
 import {
   displayUrlHost,
@@ -15,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 type ProfileViewProps = {
   profile: Profile;
+  reputation: ReputationSnapshot;
 };
 
 type ProfileLink = {
@@ -24,7 +27,7 @@ type ProfileLink = {
   icon: LucideIcon;
 };
 
-export function ProfileView({ profile }: ProfileViewProps) {
+export function ProfileView({ profile, reputation }: ProfileViewProps) {
   const displayName = hasProfileValue(profile.full_name)
     ? profile.full_name
     : profile.username;
@@ -98,6 +101,36 @@ export function ProfileView({ profile }: ProfileViewProps) {
             ) : null}
           </header>
         </div>
+      </Card>
+
+      <Card className="shadow-sm">
+        <CardContent className="space-y-4 p-4 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Reputation
+              </p>
+              <p className="mt-1 text-2xl font-semibold tracking-tight">
+                {reputation.level}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {reputation.total_points}{" "}
+                {reputation.total_points === 1 ? "point" : "points"}
+              </p>
+            </div>
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+              {reputation.level}
+            </span>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold tracking-tight">
+              Recent Achievements
+            </h3>
+            <div className="mt-2">
+              <RecentAchievements events={reputation.events.slice(0, 5)} />
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
       {hasProfileValue(profile.bio) ? (
