@@ -22,6 +22,11 @@ const sourceSerif = Source_Serif_4({
 export const metadata: Metadata = {
   title: "Alvora",
   description: "AI Builder Identity & Validation Platform",
+  applicationName: "Alvora",
+  icons: {
+    icon: [{ url: "/alvora-mark.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/alvora-mark.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default async function RootLayout({
@@ -33,13 +38,13 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${outfit.variable} ${sourceSerif.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
+        className={`${outfit.variable} ${sourceSerif.variable} flex min-h-dvh flex-col overflow-x-hidden bg-background font-sans text-foreground antialiased`}
       >
         <SiteHeader />
         {profile ? (
           <AccountStatusBanner status={profile.account_status} />
         ) : null}
-        {children}
+        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         <SiteFooter />
         <Toaster />
       </body>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandLockup } from "@/components/brand/alvora-mark";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { getAdminContext } from "@/lib/admin/access";
 import { logoutAction } from "@/lib/actions/auth";
@@ -18,12 +19,7 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
-        <Link
-          href="/"
-          className="font-display text-lg tracking-tight text-foreground"
-        >
-          Alvora
-        </Link>
+        <BrandLockup href="/" size="md" />
 
         <nav className="flex max-w-[70%] items-center gap-1 overflow-x-auto sm:max-w-none sm:gap-2">
           {user ? (

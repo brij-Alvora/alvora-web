@@ -1,10 +1,15 @@
 import Link from "next/link";
 
+import { BrandLockup } from "@/components/brand/alvora-mark";
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-border/60">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p>Alvora · builder identity and validation</p>
+        <div className="flex flex-col gap-1">
+          <BrandLockup href="/" size="sm" />
+          <p>Builder identity and validation</p>
+        </div>
         <nav className="flex flex-wrap gap-4">
           <Link href="/privacy" className="hover:text-foreground">
             Privacy
