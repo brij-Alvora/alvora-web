@@ -6,6 +6,12 @@ export const NOTIFICATION_TYPES = [
   "support_ticket_updated",
   "support_ticket_resolved",
   "account_warned",
+  "project_score_updated",
+  "reputation_increased",
+  "validation_opportunity",
+  "validation_request_accepted",
+  "validation_request_declined",
+  "review_acknowledged",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -18,6 +24,12 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   support_ticket_updated: "Support ticket updated",
   support_ticket_resolved: "Support ticket resolved",
   account_warned: "Account warning",
+  project_score_updated: "Project score updated",
+  reputation_increased: "Reputation increased",
+  validation_opportunity: "New validation opportunity",
+  validation_request_accepted: "Validation request accepted",
+  validation_request_declined: "Validation request declined",
+  review_acknowledged: "Review acknowledged",
 };
 
 export function isNotificationType(value: string): value is NotificationType {

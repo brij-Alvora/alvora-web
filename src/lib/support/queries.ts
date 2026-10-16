@@ -38,6 +38,20 @@ export async function getMySupportTicketById(
   userId: string,
   id: string,
 ): Promise<SupportTicket | null> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("support_tickets")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!error && data) {
+      return mapSupportTicket(data as Record<string, unknown>);
+    }
+  } catch {
+    /* fall through to list lookup */
+  }
   const tickets = await getMySupportTickets(userId);
   return tickets.find((ticket) => ticket.id === id) ?? null;
 }

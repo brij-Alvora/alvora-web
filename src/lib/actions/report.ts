@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 
 import { createAdminAlert } from "@/lib/admin/alerts";
 import { toUserSafeError } from "@/lib/errors/user-safe";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { reportSchema } from "@/lib/validations/report";
 
@@ -51,32 +50,11 @@ export async function submitReportAction(
     .select("id")
     .maybeSingle();
 
-  let reportId = typeof data?.id === "string" ? data.id : null;
+  const reportId = typeof data?.id === "string" ? data.id : null;
   if (error || !reportId) {
-    try {
-      const admin = createAdminClient();
-      const { data: adminData, error: adminError } = await admin
-        .from("reports")
-        .insert(payload)
-        .select("id")
-        .maybeSingle();
-      reportId = typeof adminData?.id === "string" ? adminData.id : null;
-      if (!reportId) {
-        return {
-          error: toUserSafeError(
-            adminError?.message ?? error?.message,
-            "Could not submit report",
-          ),
-        };
-      }
-    } catch (adminError) {
-      return {
-        error: toUserSafeError(
-          adminError instanceof Error ? adminError.message : error?.message,
-          "Could not submit report",
-        ),
-      };
-    }
+    return {
+      error: toUserSafeError(error?.message, "Could not submit report"),
+    };
   }
 
   await createAdminAlert({

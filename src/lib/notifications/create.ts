@@ -27,6 +27,8 @@ export async function createNotification(input: {
       entity_id: input.entityId,
       source_id: input.entityId,
       is_read: false,
+      channel: "in_app",
+      email_status: "skipped",
       ...(input.createdAt ? { created_at: input.createdAt } : {}),
     };
     const { data, error } = await admin
@@ -37,7 +39,20 @@ export async function createNotification(input: {
 
     if (error) {
       if (error.code === "23505") return;
-      console.error("[notifications] insert failed", error.message);
+      const fallback = { ...payload } as Record<string, unknown>;
+      delete fallback.channel;
+      delete fallback.email_status;
+      const retry = await admin
+        .from("notifications")
+        .insert(fallback)
+        .select("*")
+        .maybeSingle();
+      if (retry.error) {
+        if (retry.error.code === "23505") return;
+        console.error("[notifications] insert failed", retry.error.message);
+        return;
+      }
+      mapNotification((retry.data ?? null) as Record<string, unknown> | null);
       return;
     }
     mapNotification((data ?? null) as Record<string, unknown> | null);

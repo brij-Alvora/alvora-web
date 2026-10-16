@@ -42,6 +42,8 @@ export function mapSupportTicket(
     description: asNullableString(row.description),
     status,
     admin_reply: asNullableString(row.admin_reply),
+    user_follow_up: asNullableString(row.user_follow_up),
+    user_follow_up_at: asNullableString(row.user_follow_up_at),
     assigned_admin_id: asNullableString(row.assigned_admin_id),
     first_response_at: asNullableString(row.first_response_at),
     closed_at: asNullableString(row.closed_at),

@@ -158,6 +158,19 @@ export default async function AdminSupportPage({ searchParams }: PageProps) {
                     <p className="mt-2 whitespace-pre-wrap text-sm">
                       {ticket.message}
                     </p>
+                    {ticket.user_follow_up ? (
+                      <div className="mt-3 rounded-md bg-secondary p-3">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                          User follow-up
+                          {ticket.user_follow_up_at
+                            ? ` · ${formatDiscoverDate(ticket.user_follow_up_at)}`
+                            : ""}
+                        </p>
+                        <p className="mt-1 whitespace-pre-wrap text-sm">
+                          {ticket.user_follow_up}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                   <StatusTimeline steps={ticketTimeline(ticket.status)} />
                   <dl className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">

@@ -18,3 +18,11 @@ export const supportTicketSchema = z.object({
 });
 
 export type SupportTicketFormValues = z.infer<typeof supportTicketSchema>;
+
+export const supportReplySchema = z.object({
+  message: z
+    .string()
+    .trim()
+    .min(10, "Reply must be at least 10 characters")
+    .max(4000, "Keep this under 4000 characters"),
+});

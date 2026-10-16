@@ -1,10 +1,13 @@
 import Link from "next/link";
 
 import { BrandLockup } from "@/components/brand/alvora-mark";
-import { NotificationBell } from "@/components/notifications/notification-bell";
+import { NotificationInbox } from "@/components/notifications/notification-inbox";
 import { getAdminContext } from "@/lib/admin/access";
 import { logoutAction } from "@/lib/actions/auth";
-import { getUnreadNotificationCount } from "@/lib/notifications/queries";
+import {
+  getMyNotifications,
+  getUnreadNotificationCount,
+} from "@/lib/notifications/queries";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +18,7 @@ export async function SiteHeader() {
   } = await supabase.auth.getUser();
   const admin = user ? await getAdminContext() : null;
   const unread = user ? await getUnreadNotificationCount(user.id) : 0;
+  const recent = user ? await getMyNotifications(user.id, 8) : [];
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
@@ -45,7 +49,11 @@ export async function SiteHeader() {
               <Button asChild variant="ghost" size="sm">
                 <Link href="/support">Support</Link>
               </Button>
-              <NotificationBell unread={unread} />
+              <NotificationInbox
+                userId={user.id}
+                initialUnread={unread}
+                initialItems={recent}
+              />
               {admin ? (
                 <Button asChild variant="ghost" size="sm">
                   <Link href="/admin">Admin</Link>
