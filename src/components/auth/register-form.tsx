@@ -10,6 +10,7 @@ import {
   resendConfirmationAction,
 } from "@/lib/actions/auth";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
+import { TurnstileField } from "@/components/auth/turnstile-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,10 +25,11 @@ export function RegisterForm() {
     register,
     handleSubmit,
     getValues,
+    setValue,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { acceptedLegal: false },
+    defaultValues: { acceptedLegal: false, captchaToken: "" },
   });
 
   const onSubmit = (values: RegisterInput) => {
@@ -144,6 +146,12 @@ export function RegisterForm() {
           </p>
         )}
       </div>
+
+      <TurnstileField
+        onToken={(token) => {
+          setValue("captchaToken", token, { shouldValidate: true });
+        }}
+      />
 
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? "Creating account..." : "Create account"}

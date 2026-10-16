@@ -1,7 +1,13 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import {
+  CAPTCHA_FAILED_MESSAGE,
+  verifyTurnstileToken,
+} from "@/lib/auth/captcha";
+import { clientIpFromHeaders } from "@/lib/auth/client-ip";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { toUserSafeError } from "@/lib/errors/user-safe";
 import { getCurrentProfile } from "@/lib/profile/queries";
@@ -58,6 +64,13 @@ export async function registerAction(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
+
+  const headerList = await headers();
+  const captchaOk = await verifyTurnstileToken(
+    parsed.data.captchaToken,
+    clientIpFromHeaders(headerList),
+  );
+  if (!captchaOk) return { error: CAPTCHA_FAILED_MESSAGE };
 
   const supabase = await createClient();
 

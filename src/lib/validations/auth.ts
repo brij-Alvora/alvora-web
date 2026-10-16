@@ -35,6 +35,7 @@ export const registerSchema = z
       .refine((value) => value === true, {
         message: "Accept the Terms, Privacy Policy, and Acceptable Use Policy",
       }),
+    captchaToken: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
