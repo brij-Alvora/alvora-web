@@ -10,6 +10,8 @@ export type ReputationMetadata = {
   project_id?: string;
   validation_id?: string;
   review_id?: string;
+  owner_id?: string;
+  reviewer_id?: string;
 };
 
 export async function insertReputationEvent(input: {
@@ -74,4 +76,29 @@ export async function countUserEvents(
     return 0;
   }
   return count ?? 0;
+}
+
+export async function countPairwiseReviewAwards(input: {
+  reviewerId: string;
+  ownerId: string;
+  sinceIso: string;
+}): Promise<number> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("reputation_events")
+    .select("id, metadata, created_at")
+    .eq("user_id", input.reviewerId)
+    .eq("event_type", "review_submitted")
+    .gte("created_at", input.sinceIso);
+  if (error || !Array.isArray(data)) return 0;
+  return data.filter((row) => {
+    const metadata = row.metadata;
+    if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+      return false;
+    }
+    return (
+      "owner_id" in metadata &&
+      metadata.owner_id === input.ownerId
+    );
+  }).length;
 }

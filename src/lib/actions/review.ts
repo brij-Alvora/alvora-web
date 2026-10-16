@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 
 import { toUserSafeError } from "@/lib/errors/user-safe";
 import { createNotification } from "@/lib/notifications/create";
+import { notifyUsers } from "@/lib/notifications/dispatch";
+import { syncProjectValidationScore } from "@/lib/projects/update-score";
 import { awardReviewSubmitted } from "@/lib/reputation/award";
+import { canReviewProject } from "@/lib/security/review-rules";
 import { assertCanContribute } from "@/lib/trust/account";
 import { mapReview } from "@/lib/review/map-review";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Review } from "@/lib/supabase/types";
 import { mapValidationRequest } from "@/lib/validation/map-request";
@@ -65,8 +67,27 @@ export async function submitReviewAction(
     return { error: toUserSafeError(requestError, "Validation request not found") };
   }
 
-  if (request.requested_by === user.id) {
-    return { error: "You cannot review your own validation request" };
+  const { data: projectRow } = await supabase
+    .from("projects")
+    .select("slug, owner_id, title")
+    .eq("id", request.project_id)
+    .maybeSingle();
+  const ownerId =
+    typeof projectRow?.owner_id === "string" ? projectRow.owner_id : null;
+
+  if (
+    !canReviewProject({
+      reviewerId: user.id,
+      ownerId,
+      requestedBy: request.requested_by,
+    })
+  ) {
+    return {
+      error:
+        ownerId === user.id
+          ? "You cannot review a project you own"
+          : "You cannot review your own validation request",
+    };
   }
 
   const { data: existingMine } = await supabase
@@ -97,56 +118,26 @@ export async function submitReviewAction(
     .select("*")
     .single();
 
-  let saved = (data ?? null) as Record<string, unknown> | null;
-  let errorMessage = error?.message;
-
-  if (!saved) {
-    try {
-      const admin = createAdminClient();
-      const { data: adminData, error: adminError } = await admin
-        .from("reviews")
-        .insert(payload)
-        .select("*")
-        .single();
-      saved = (adminData ?? null) as Record<string, unknown> | null;
-      errorMessage = adminError?.message ?? errorMessage;
-    } catch (adminError) {
-      errorMessage =
-        adminError instanceof Error ? adminError.message : errorMessage;
-    }
-  }
+  const saved = (data ?? null) as Record<string, unknown> | null;
+  const errorMessage = error?.message;
 
   const review = mapReview(saved);
   if (!review) {
     return { error: toUserSafeError(errorMessage, "Could not save review") };
   }
 
-  if (request.status === "open") {
-    const { error: statusError } = await supabase
+  const wasOpen = request.status === "open";
+  if (wasOpen) {
+    await supabase
       .from("validation_requests")
       .update({ status: "in_review" })
       .eq("id", request.id)
       .eq("status", "open");
-
-    if (statusError) {
-      try {
-        const admin = createAdminClient();
-        await admin
-          .from("validation_requests")
-          .update({ status: "in_review" })
-          .eq("id", request.id)
-          .eq("status", "open");
-      } catch {
-        /* status stays Open until an owner updates it */
-      }
-    }
   }
 
-  const { data: projectRow } = await supabase
-    .from("projects")
-    .select("slug, owner_id")
-    .eq("id", request.project_id)
-    .maybeSingle();
+  const projectTitle =
+    typeof projectRow?.title === "string" ? projectRow.title : "your project";
+  const scoreChange = await syncProjectValidationScore(request.project_id);
 
   await awardReviewSubmitted(
     user.id,
@@ -157,24 +148,48 @@ export async function submitReviewAction(
 
   const recipients = new Set<string>();
   if (request.requested_by !== user.id) recipients.add(request.requested_by);
-  const ownerId =
-    typeof projectRow?.owner_id === "string" ? projectRow.owner_id : null;
   if (ownerId && ownerId !== user.id) recipients.add(ownerId);
-  await Promise.all(
-    [...recipients].map((recipientId) =>
-      createNotification({
-        userId: recipientId,
-        type: "review_received",
-        title: "Review received",
-        message: "A builder submitted a review on your validation request.",
-        href: `/validations/${request.id}`,
-        entityType: "review",
-        entityId: review.id,
-      }),
-    ),
-  );
+  await notifyUsers([...recipients], {
+    type: "review_received",
+    title: "Review received",
+    message: `${projectTitle} received a ${review.rating}★ review.`,
+    href: `/projects/${request.project_id}/feedback`,
+    entityType: "review",
+    entityId: review.id,
+  });
+
+  if (wasOpen) {
+    await notifyUsers([...recipients], {
+      type: "validation_request_accepted",
+      title: "Validation request accepted",
+      message: `A validator started reviewing “${request.request_title}”.`,
+      href: `/validations/${request.id}`,
+      entityType: "validation_request",
+      entityId: `${request.id}:accepted`,
+    });
+  }
+
+  if (
+    scoreChange &&
+    scoreChange.previous !== scoreChange.next &&
+    ownerId &&
+    ownerId !== user.id
+  ) {
+    await createNotification({
+      userId: ownerId,
+      type: "project_score_updated",
+      title: "Project score updated",
+      message: `${projectTitle} is now ${scoreChange.next} from reviewer ratings.`,
+      href: `/projects/${request.project_id}/feedback`,
+      entityType: "project",
+      entityId: `${request.project_id}:${scoreChange.next}:${review.id}`,
+    });
+  }
 
   revalidatePath("/dashboard");
+  revalidatePath("/projects");
+  revalidatePath("/projects/given");
+  revalidatePath(`/projects/${request.project_id}/feedback`);
   revalidatePath("/validations");
   revalidatePath(`/validations/${request.id}`);
   if (projectRow?.slug) revalidatePath(`/project/${projectRow.slug}`);

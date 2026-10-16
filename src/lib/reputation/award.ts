@@ -4,14 +4,23 @@ import { createNotification } from "@/lib/notifications/create";
 import { getProfileCompletion } from "@/lib/profile/presentation";
 import { calculateReputation } from "@/lib/reputation/calculator";
 import {
+  countPairwiseReviewAwards,
   countUserEvents,
   insertReputationEvent,
   type ReputationMetadata,
 } from "@/lib/reputation/insert-event";
 import {
+  PAIRWISE_REVIEW_LIMIT,
+  PAIRWISE_WINDOW_MS,
+} from "@/lib/reputation/pairwise";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
   PROFILE_COMPLETION_THRESHOLD,
+  REPUTATION_EVENT_LABELS,
+  REPUTATION_POINTS,
   type ReputationEventType,
 } from "@/lib/reputation/rules";
+import { hasIndependentVisibleReview } from "@/lib/security/independent-review";
 import type { Profile } from "@/lib/supabase/types";
 
 function revalidateReputation() {
@@ -35,6 +44,17 @@ export async function awardReputationEvent(input: {
     if (result.error) return false;
     if (result.created) {
       revalidateReputation();
+      const points = REPUTATION_POINTS[input.eventType];
+      if (points <= 0) return result.created;
+      await createNotification({
+        userId: input.userId,
+        type: "reputation_increased",
+        title: "Reputation increased",
+        message: `+${points} from ${REPUTATION_EVENT_LABELS[input.eventType]}.`,
+        href: "/reputation",
+        entityType: "user",
+        entityId: `${input.eventType}:${input.sourceId}`,
+      });
       const after = await calculateReputation(input.userId);
       if (before.level !== after.level) {
         await createNotification({
@@ -125,6 +145,13 @@ export async function awardValidationCompleted(
   validationId: string,
   projectId: string,
 ): Promise<void> {
+  const qualified = await hasIndependentVisibleReview({
+    validationId,
+    projectId,
+    requestedBy: userId,
+  });
+  if (!qualified) return;
+
   const created = await awardReputationEvent({
     userId,
     eventType: "validation_completed",
@@ -150,7 +177,25 @@ export async function awardReviewSubmitted(
   validationId: string,
   projectId: string,
 ): Promise<void> {
-  await awardReputationEvent({
+  const admin = createAdminClient();
+  const { data: project } = await admin
+    .from("projects")
+    .select("owner_id")
+    .eq("id", projectId)
+    .maybeSingle();
+  const ownerId =
+    typeof project?.owner_id === "string" ? project.owner_id : "";
+  const sinceIso = new Date(Date.now() - PAIRWISE_WINDOW_MS).toISOString();
+  const pairwiseCount = ownerId
+    ? await countPairwiseReviewAwards({
+        reviewerId: userId,
+        ownerId,
+        sinceIso,
+      })
+    : 0;
+  if (pairwiseCount >= PAIRWISE_REVIEW_LIMIT) return;
+
+  const created = await awardReputationEvent({
     userId,
     eventType: "review_submitted",
     sourceId: reviewId,
@@ -158,8 +203,11 @@ export async function awardReviewSubmitted(
       review_id: reviewId,
       validation_id: validationId,
       project_id: projectId,
+      owner_id: ownerId || undefined,
+      reviewer_id: userId,
     },
   });
+  if (!created) return;
 
   const reviewCount = await countUserEvents(userId, "review_submitted");
   if (reviewCount < 1) return;
@@ -172,6 +220,8 @@ export async function awardReviewSubmitted(
       review_id: reviewId,
       validation_id: validationId,
       project_id: projectId,
+      owner_id: ownerId || undefined,
+      reviewer_id: userId,
     },
   });
 }

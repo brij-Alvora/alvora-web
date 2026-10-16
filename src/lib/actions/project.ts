@@ -142,23 +142,6 @@ export async function saveProjectAction(
       .maybeSingle();
     saved = (data ?? null) as Record<string, unknown> | null;
     errorMessage = error?.message;
-    if (!saved && !errorMessage) {
-      try {
-        const admin = createAdminClient();
-        const { data: adminData, error: adminError } = await admin
-          .from("projects")
-          .update(fields)
-          .eq("id", existingId)
-          .eq("owner_id", user.id)
-          .select("*")
-          .maybeSingle();
-        saved = (adminData ?? null) as Record<string, unknown> | null;
-        errorMessage = adminError?.message;
-      } catch (adminError) {
-        errorMessage =
-          adminError instanceof Error ? adminError.message : errorMessage;
-      }
-    }
   } else {
     const { data, error } = await supabase
       .from("projects")
@@ -171,25 +154,6 @@ export async function saveProjectAction(
       .single();
     saved = (data ?? null) as Record<string, unknown> | null;
     errorMessage = error?.message;
-    if (!saved) {
-      try {
-        const admin = createAdminClient();
-        const { data: adminData, error: adminError } = await admin
-          .from("projects")
-          .insert({
-            ...fields,
-            owner_id: user.id,
-            slug: await allocateSlug(values.title),
-          })
-          .select("*")
-          .single();
-        saved = (adminData ?? null) as Record<string, unknown> | null;
-        errorMessage = adminError?.message;
-      } catch (adminError) {
-        errorMessage =
-          adminError instanceof Error ? adminError.message : errorMessage;
-      }
-    }
   }
 
   let project = mapProject(saved);

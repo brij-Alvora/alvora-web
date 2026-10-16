@@ -118,12 +118,18 @@ export async function getProjectsByIds(ids: string[]): Promise<Project[]> {
   const unique = [...new Set(ids.filter(Boolean))];
   if (unique.length === 0) return [];
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from("projects")
     .select("*")
     .in("id", unique);
   if (error || !data) return [];
-  return mapRows(data);
+  return mapRows(data).filter(
+    (project) =>
+      project.status === "published" || project.owner_id === user?.id,
+  );
 }
 
 export async function countOwnerProjects(userId: string): Promise<number> {

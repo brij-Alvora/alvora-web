@@ -11,6 +11,7 @@ import {
 } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/supabase/types";
+import { stripPrivilegedProfileFields } from "@/lib/security/profile-privileges";
 import {
   normalizeProfileValues,
   profileSchema,
@@ -68,7 +69,7 @@ export async function upsertProfileAction(
     return { error: "That username is already taken" };
   }
 
-  const payload = {
+  const payload = stripPrivilegedProfileFields({
     username: normalized.username,
     full_name: normalized.full_name,
     headline: normalized.headline,
@@ -78,7 +79,7 @@ export async function upsertProfileAction(
     github_url: normalized.github_url,
     linkedin_url: normalized.linkedin_url,
     updated_at: new Date().toISOString(),
-  };
+  });
 
   let saved: Record<string, unknown> | null = null;
   let errorMessage: string | undefined;

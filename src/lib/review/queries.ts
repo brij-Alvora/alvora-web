@@ -38,6 +38,22 @@ async function attachReviewers(reviews: Review[]): Promise<ReviewWithReviewer[]>
   }));
 }
 
+export async function getReviewsForProject(
+  projectId: string,
+): Promise<ReviewWithReviewer[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*")
+    .eq("project_id", projectId)
+    .neq("moderation_status", "hidden")
+    .neq("moderation_status", "flagged")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return attachReviewers(mapRows(data));
+}
+
 export async function getReviewsForValidationRequest(
   validationRequestId: string,
 ): Promise<ReviewWithReviewer[]> {

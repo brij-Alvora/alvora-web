@@ -197,7 +197,13 @@ export type NotificationTypeName =
   | "project_published"
   | "support_ticket_updated"
   | "support_ticket_resolved"
-  | "account_warned";
+  | "account_warned"
+  | "project_score_updated"
+  | "reputation_increased"
+  | "validation_opportunity"
+  | "validation_request_accepted"
+  | "validation_request_declined"
+  | "review_acknowledged";
 
 export type NotificationEntityType =
   | "user"
@@ -220,6 +226,8 @@ export type AppNotification = {
   is_read: boolean;
   read_at: string | null;
   created_at: string;
+  channel?: "in_app" | "email" | "both";
+  email_status?: "pending" | "sent" | "skipped" | null;
 };
 
 export type AppNotificationInsert = {
@@ -236,6 +244,8 @@ export type AppNotificationInsert = {
   is_read?: boolean;
   read_at?: string | null;
   created_at?: string;
+  channel?: "in_app" | "email" | "both";
+  email_status?: "pending" | "sent" | "skipped" | null;
 };
 
 export type AppNotificationUpdate = Partial<
@@ -311,6 +321,8 @@ export type SupportTicket = {
   description: string | null;
   status: SupportTicketStatus;
   admin_reply: string | null;
+  user_follow_up: string | null;
+  user_follow_up_at: string | null;
   assigned_admin_id: string | null;
   first_response_at: string | null;
   closed_at: string | null;
@@ -328,6 +340,8 @@ export type SupportTicketInsert = {
   description?: string | null;
   status?: SupportTicketStatus;
   admin_reply?: string | null;
+  user_follow_up?: string | null;
+  user_follow_up_at?: string | null;
   assigned_admin_id?: string | null;
   first_response_at?: string | null;
   closed_at?: string | null;
@@ -484,6 +498,26 @@ export type Database = {
         Row: AdminAlert;
         Insert: AdminAlertInsert;
         Update: AdminAlertUpdate;
+        Relationships: [];
+      };
+      auth_rate_limits: {
+        Row: {
+          id: string;
+          action: string;
+          bucket: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          action: string;
+          bucket: string;
+          created_at?: string;
+        };
+        Update: {
+          action?: string;
+          bucket?: string;
+          created_at?: string;
+        };
         Relationships: [];
       };
     };

@@ -11,8 +11,17 @@ import {
 } from "@/lib/admin/alerts";
 import { logModerationAction } from "@/lib/admin/log";
 import { createNotification } from "@/lib/notifications/create";
+import { getReviewerIdsForRequest, notifyUsers } from "@/lib/notifications/dispatch";
 import { mapProfile } from "@/lib/profile/map-profile";
 import { awardValidationCompleted } from "@/lib/reputation/award";
+import {
+  restoreReputationForReview,
+  reverseReputationForReview,
+} from "@/lib/reputation/clawback";
+import { hasIndependentVisibleReview } from "@/lib/security/independent-review";
+import { canManuallySetValidationStatus } from "@/lib/security/validation-status";
+import { mapReview } from "@/lib/review/map-review";
+import { syncProjectValidationScore } from "@/lib/projects/update-score";
 import { isReportQueueStatus } from "@/lib/reports/types";
 import { isSupportStatus } from "@/lib/support/types";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -127,7 +136,7 @@ export async function setAccountStatusAction(
       message:
         reason?.trim() ||
         "A moderator issued a warning on your account. Please follow community guidelines.",
-      href: "/support",
+      href: "/support/warning",
       entityType: "user",
       entityId: `warn:${Date.now()}`,
     });
@@ -154,6 +163,39 @@ export async function adminUpdateValidationStatusAction(
   }
 
   const admin = createAdminClient();
+  const { data: existing } = await admin
+    .from("validation_requests")
+    .select("id, project_id, requested_by, status")
+    .eq("id", requestId)
+    .maybeSingle();
+  const current = mapValidationRequest(
+    (existing ?? null) as Record<string, unknown> | null,
+  );
+  if (!current) return { error: "Request not found" };
+  const qualified = await hasIndependentVisibleReview({
+    validationId: current.id,
+    projectId: current.project_id,
+    requestedBy: current.requested_by,
+  });
+  if (
+    !canManuallySetValidationStatus({
+      from: current.status,
+      to: status,
+      hasIndependentReview: qualified,
+    })
+  ) {
+    return {
+      error:
+        "Completed validations cannot be moved back to open. They reopen only if qualifying reviews are removed.",
+    };
+  }
+  if (status === "completed" && !qualified) {
+    return {
+      error:
+        "Complete a validation only after at least one independent visible review.",
+    };
+  }
+
   const { data, error } = await admin
     .from("validation_requests")
     .update({ status })
@@ -176,6 +218,15 @@ export async function adminUpdateValidationStatusAction(
       request.id,
       request.project_id,
     );
+    const reviewers = await getReviewerIdsForRequest(request.id);
+    await notifyUsers(reviewers, {
+      type: "review_acknowledged",
+      title: "Review acknowledged",
+      message: `Your review on “${request.request_title}” was included in a completed validation.`,
+      href: `/validations/${request.id}`,
+      entityType: "validation_request",
+      entityId: `${request.id}:acknowledged`,
+    });
   }
 
   await logModerationAction({
@@ -197,10 +248,19 @@ export async function moderateReviewAction(
 ): Promise<AdminActionResult> {
   const { user } = await requireAdmin();
   const admin = createAdminClient();
+  const { data: existing } = await admin
+    .from("reviews")
+    .select("*")
+    .eq("id", reviewId)
+    .maybeSingle();
+  const review = mapReview((existing ?? null) as Record<string, unknown> | null);
+  if (!review) return { error: "Review not found" };
 
   if (moderation === "deleted") {
     const { error } = await admin.from("reviews").delete().eq("id", reviewId);
     if (error) return { error: toUserSafeError(error, "Could not delete review") };
+    await reverseReputationForReview(review);
+    await syncProjectValidationScore(review.project_id);
     await logModerationAction({
       adminId: user.id,
       entityType: "review",
@@ -217,6 +277,13 @@ export async function moderateReviewAction(
     .eq("id", reviewId);
 
   if (error) return { error: toUserSafeError(error, "Could not update review") };
+
+  if (moderation === "visible") {
+    await restoreReputationForReview(review);
+  } else {
+    await reverseReputationForReview(review);
+  }
+  await syncProjectValidationScore(review.project_id);
   await logModerationAction({
     adminId: user.id,
     entityType: "review",

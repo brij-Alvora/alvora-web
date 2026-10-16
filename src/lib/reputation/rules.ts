@@ -4,8 +4,11 @@ export const REPUTATION_EVENT_TYPES = [
   "first_project_published",
   "validation_request_created",
   "validation_completed",
+  "validation_completed_retracted",
   "review_submitted",
+  "review_retracted",
   "first_review_bonus",
+  "first_review_bonus_retracted",
 ] as const;
 
 export type ReputationEventType = (typeof REPUTATION_EVENT_TYPES)[number];
@@ -16,8 +19,11 @@ export const REPUTATION_POINTS: Record<ReputationEventType, number> = {
   first_project_published: 15,
   validation_request_created: 10,
   validation_completed: 20,
+  validation_completed_retracted: -20,
   review_submitted: 15,
+  review_retracted: -15,
   first_review_bonus: 10,
+  first_review_bonus_retracted: -10,
 };
 
 export const REPUTATION_EVENT_LABELS: Record<ReputationEventType, string> = {
@@ -26,8 +32,11 @@ export const REPUTATION_EVENT_LABELS: Record<ReputationEventType, string> = {
   first_project_published: "First Published Project",
   validation_request_created: "Validation Request Created",
   validation_completed: "Validation Completed",
+  validation_completed_retracted: "Validation Completion Reversed",
   review_submitted: "Submitted Review",
+  review_retracted: "Review Removed",
   first_review_bonus: "First Review",
+  first_review_bonus_retracted: "First Review Reversed",
 };
 
 export const PROFILE_COMPLETION_THRESHOLD = 75;

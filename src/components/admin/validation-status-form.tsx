@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { adminUpdateValidationStatusAction } from "@/lib/actions/admin";
+import { allowedManualValidationStatuses } from "@/lib/security/validation-status";
 import type { ValidationStatus } from "@/lib/supabase/types";
 import { VALIDATION_STATUS_LABELS } from "@/lib/validations/validation-request";
 import { Button } from "@/components/ui/button";
@@ -12,13 +13,13 @@ import { Button } from "@/components/ui/button";
 type ValidationStatusFormProps = {
   requestId: string;
   current: ValidationStatus;
+  hasIndependentReview?: boolean;
 };
-
-const STATUSES: ValidationStatus[] = ["open", "in_review", "completed"];
 
 export function ValidationStatusForm({
   requestId,
   current,
+  hasIndependentReview = true,
 }: ValidationStatusFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -28,7 +29,8 @@ export function ValidationStatusForm({
       <Button asChild size="sm" variant="outline">
         <Link href={`/admin/validations/${requestId}`}>View</Link>
       </Button>
-      {STATUSES.map((status) => (
+      {allowedManualValidationStatuses(current, hasIndependentReview).map(
+        (status) => (
         <Button
           key={status}
           type="button"
@@ -44,7 +46,8 @@ export function ValidationStatusForm({
         >
           {VALIDATION_STATUS_LABELS[status]}
         </Button>
-      ))}
+      ),
+      )}
     </div>
   );
 }
