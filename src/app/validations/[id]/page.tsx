@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { ReportButton } from "@/components/reports/report-button";
 import { formatDiscoverDate } from "@/lib/discover/format";
 import { ReviewList } from "@/components/review/review-list";
+import { ValidatorResponse } from "@/components/validation/validator-response";
 import { ValidationStatusControls } from "@/components/validation/validation-status-controls";
 import { averageRating } from "@/lib/review/map-review";
 import {
@@ -113,11 +114,7 @@ export default async function ValidationRequestDetailPage({
             </p>
           </div>
           {canSubmitReview ? (
-            <Button asChild>
-              <Link href={`/validations/${request.id}/review`}>
-                Submit review
-              </Link>
-            </Button>
+            <ValidatorResponse requestId={request.id} />
           ) : mine ? (
             <p className="text-sm text-muted-foreground">You already reviewed this request.</p>
           ) : null}

@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 type ReviewListProps = {
   reviews: ReviewWithReviewer[];
+  emptyMessage?: string;
 };
 
 function reviewerLabel(review: ReviewWithReviewer) {
@@ -18,11 +19,14 @@ function reviewerLabel(review: ReviewWithReviewer) {
   return "Reviewer";
 }
 
-export function ReviewList({ reviews }: ReviewListProps) {
+export function ReviewList({
+  reviews,
+  emptyMessage = "No reviews yet. Be the first to evaluate this request.",
+}: ReviewListProps) {
   if (reviews.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-        No reviews yet. Be the first to evaluate this request.
+        {emptyMessage}
       </p>
     );
   }
@@ -57,9 +61,7 @@ export function ReviewList({ reviews }: ReviewListProps) {
 
               {review.what_works_well ? (
                 <section className="space-y-1">
-                  <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    What works well
-                  </h3>
+                  <h3 className="text-xs text-muted-foreground">Works well</h3>
                   <p className="whitespace-pre-wrap text-sm leading-6">
                     {review.what_works_well}
                   </p>
@@ -68,9 +70,7 @@ export function ReviewList({ reviews }: ReviewListProps) {
 
               {review.improvement_areas ? (
                 <section className="space-y-1">
-                  <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Improvement areas
-                  </h3>
+                  <h3 className="text-xs text-muted-foreground">Improve</h3>
                   <p className="whitespace-pre-wrap text-sm leading-6">
                     {review.improvement_areas}
                   </p>
@@ -79,9 +79,7 @@ export function ReviewList({ reviews }: ReviewListProps) {
 
               {review.recommendations ? (
                 <section className="space-y-1">
-                  <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Recommendations
-                  </h3>
+                  <h3 className="text-xs text-muted-foreground">Recommend</h3>
                   <p className="whitespace-pre-wrap text-sm leading-6">
                     {review.recommendations}
                   </p>

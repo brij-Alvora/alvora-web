@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ProjectView } from "@/components/projects/project-view";
 import { getPublishedProjectBySlug } from "@/lib/project/queries";
 import { getProfileByAuthId } from "@/lib/profile/queries";
+import { getPublicProjectInsights } from "@/lib/projects/workspace";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +29,18 @@ export default async function PublicProjectPage({ params }: PageProps) {
   const project = await getPublishedProjectBySlug(slug);
   if (!project) notFound();
 
-  const owner = await getProfileByAuthId(project.owner_id);
+  const [owner, performance] = await Promise.all([
+    getProfileByAuthId(project.owner_id),
+    getPublicProjectInsights(project.id),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-      <ProjectView project={project} owner={owner} />
+      <ProjectView
+        project={project}
+        owner={owner}
+        performance={performance}
+      />
     </div>
   );
 }

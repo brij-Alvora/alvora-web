@@ -6,17 +6,20 @@ import type { Project } from "@/lib/supabase/types";
 import { hasProfileValue } from "@/lib/profile/presentation";
 import { displayUrlHost } from "@/lib/profile/presentation";
 import { ReportButton } from "@/components/reports/report-button";
+import { ProjectInsights } from "@/components/projects/project-insights";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProjectThumbnail } from "@/components/projects/project-thumbnail";
+import type { ProjectPerformance } from "@/lib/projects/performance";
 
 type ProjectViewProps = {
   project: Project;
   owner: Profile | null;
+  performance?: ProjectPerformance | null;
 };
 
-export function ProjectView({ project, owner }: ProjectViewProps) {
+export function ProjectView({ project, owner, performance }: ProjectViewProps) {
   const links = [
     project.demo_url
       ? { href: project.demo_url, label: "Live demo", icon: ExternalLink }
@@ -103,6 +106,8 @@ export function ProjectView({ project, owner }: ProjectViewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {performance ? <ProjectInsights performance={performance} /> : null}
 
       {project.description ? (
         <Card className="shadow-sm">
