@@ -1,6 +1,12 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+import { AdminMfaGate } from "@/components/admin/admin-mfa-gate";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { requireAdmin } from "@/lib/admin/access";
 import { getAdminInbox } from "@/lib/admin/alerts";
+import { getAdminAssuranceLevel } from "@/lib/admin/assurance";
+import { isAal2, isAdminMfaRequired } from "@/lib/admin/mfa";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +16,20 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   await requireAdmin();
-  const inbox = await getAdminInbox();
+  const [inbox, aal] = await Promise.all([
+    getAdminInbox(),
+    getAdminAssuranceLevel(),
+  ]);
+  const enforced = isAdminMfaRequired();
+  const pathname = (await headers()).get("x-alvora-pathname") ?? "";
+  if (
+    enforced &&
+    !isAal2(aal) &&
+    pathname.startsWith("/admin") &&
+    pathname !== "/admin/mfa"
+  ) {
+    redirect("/admin/mfa");
+  }
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -24,7 +43,9 @@ export default async function AdminLayout({
         </p>
       </div>
       <AdminNav alertCount={inbox.count} />
-      {children}
+      <AdminMfaGate currentAal={aal} enforced={enforced}>
+        {children}
+      </AdminMfaGate>
     </div>
   );
 }

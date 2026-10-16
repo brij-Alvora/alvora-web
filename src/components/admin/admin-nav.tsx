@@ -16,6 +16,7 @@ const LINKS = [
   { href: "/admin/alerts", label: "Alerts" },
   { href: "/admin/events", label: "Events" },
   { href: "/admin/analytics", label: "Analytics" },
+  { href: "/admin/mfa", label: "MFA" },
 ];
 
 export function AdminNav({ alertCount = 0 }: { alertCount?: number }) {

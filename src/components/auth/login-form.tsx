@@ -16,6 +16,8 @@ const CALLBACK_ERRORS: Record<string, string> = {
   auth_callback_failed:
     "That confirmation link is invalid or expired. Sign in, or request a new email.",
   banned: "This account is banned.",
+  unconfirmed:
+    "Confirm your email before signing in. Check your inbox for the link.",
 };
 
 type LoginFormProps = {
