@@ -4,7 +4,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { DiscoverProjectCard } from "@/components/discover/discover-project-card";
 import { ExpertiseList } from "@/components/mentors/expertise-list";
-import { FoundingMentorBadge } from "@/components/mentors/founding-mentor-badge";
+import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
 import { RecentAchievements } from "@/components/reputation/recent-achievements";
 import type { DiscoverProject } from "@/lib/discover/queries";
 import type { ReputationSnapshot } from "@/lib/reputation/calculator";
@@ -73,10 +73,10 @@ export function ProfileView({
 
   return (
     <article className="mx-auto w-full max-w-[52rem] space-y-3 sm:space-y-4">
-      <Card className="overflow-hidden shadow-sm">
+      <Card className="shadow-sm">
         <div
           aria-hidden
-          className="h-24 bg-[linear-gradient(135deg,#0f766e_0%,#134e4a_48%,#1c1917_100%)] sm:h-36"
+          className="h-24 rounded-t-xl bg-[linear-gradient(135deg,#0f766e_0%,#134e4a_48%,#1c1917_100%)] sm:h-36"
         />
 
         <div className="px-4 pb-6 sm:px-8">
@@ -91,13 +91,15 @@ export function ProfileView({
 
           <header className="mt-4 space-y-2">
             <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[1.65rem] font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
-                  {displayName}
-                </h1>
-                {profile.is_founding_mentor ? <FoundingMentorBadge /> : null}
-              </div>
-              <p className="mt-0.5 text-sm text-muted-foreground sm:text-base">
+              <h1 className="text-[1.65rem] font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
+                {displayName}
+              </h1>
+              {profile.is_founding_mentor ? (
+                <div className="mt-3">
+                  <FoundingMentorCredential />
+                </div>
+              ) : null}
+              <p className="mt-1.5 text-sm text-muted-foreground sm:text-base">
                 @{profile.username}
               </p>
             </div>

@@ -97,7 +97,7 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
             Featured Founding Mentors
           </h2>
           <p className="text-sm text-muted-foreground">
-            The closed-beta mentor cohort.
+            Invited experts selected to help establish trusted project reviews.
           </p>
         </div>
         <DiscoverMentors

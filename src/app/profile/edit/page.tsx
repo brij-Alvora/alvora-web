@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
 import { AvatarUploader } from "@/components/profile/avatar-uploader";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { hasProfileValue } from "@/lib/profile/presentation";
@@ -45,6 +46,7 @@ export default async function EditProfilePage() {
         <p className="text-muted-foreground">
           This information appears on your public Alvora page.
         </p>
+        {profile?.is_founding_mentor ? <FoundingMentorCredential /> : null}
       </div>
 
       <Card>

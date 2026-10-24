@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { AdminToolbar } from "@/components/admin/admin-toolbar";
-import { FoundingMentorBadge } from "@/components/mentors/founding-mentor-badge";
+import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
 import { ReviewModerationActions } from "@/components/admin/review-moderation-actions";
 import {
   compareDate,
@@ -91,14 +91,14 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                   <CardContent className="space-y-3 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <p className="flex flex-wrap items-center gap-2 font-medium">
-                          <span>
-                            {review.rating}/5 · {name}
-                          </span>
-                          {reviewer?.is_founding_mentor ? (
-                            <FoundingMentorBadge />
-                          ) : null}
+                        <p className="font-medium">
+                          {review.rating}/5 · {name}
                         </p>
+                        {reviewer?.is_founding_mentor ? (
+                          <div className="mt-2">
+                            <FoundingMentorCredential showStatement={false} />
+                          </div>
+                        ) : null}
                         <p className="text-sm text-muted-foreground">
                           {review.project?.title ?? "Project"} ·{" "}
                           {formatDiscoverDate(review.created_at)}

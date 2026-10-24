@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 
+import { FoundingMentorStatus } from "@/components/mentors/founding-mentor-status";
 import { ReputationCard } from "@/components/reputation/reputation-card";
 import { ReputationHistory } from "@/components/reputation/reputation-history";
+import { getCurrentProfile } from "@/lib/profile/queries";
 import { calculateReputation } from "@/lib/reputation/calculator";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,7 +20,10 @@ export default async function ReputationPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const reputation = await calculateReputation(user.id);
+  const [reputation, profile] = await Promise.all([
+    calculateReputation(user.id),
+    getCurrentProfile(),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -31,6 +36,7 @@ export default async function ReputationPage() {
           the sum of these events.
         </p>
       </div>
+      {profile?.is_founding_mentor ? <FoundingMentorStatus /> : null}
       <ReputationCard
         totalPoints={reputation.total_points}
         level={reputation.level}

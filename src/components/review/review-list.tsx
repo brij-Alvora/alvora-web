@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
 
-import { FoundingMentorBadge } from "@/components/mentors/founding-mentor-badge";
+import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
 import { formatDiscoverDate } from "@/lib/discover/format";
 import type { ReviewWithReviewer } from "@/lib/review/queries";
 import { hasProfileValue } from "@/lib/profile/presentation";
@@ -36,26 +36,21 @@ export function ReviewList({
     <ul className="space-y-3">
       {reviews.map((review) => (
         <li key={review.id}>
-          <Card className="shadow-sm">
+          <Card className="relative shadow-sm hover:z-10 focus-within:z-10">
             <CardContent className="space-y-4 p-5">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {review.reviewer?.username ? (
-                      <Link
-                        href={`/u/${review.reviewer.username}`}
-                        className="text-sm font-medium hover:underline"
-                      >
-                        {reviewerLabel(review)}
-                      </Link>
-                    ) : (
-                      <p className="text-sm font-medium">{reviewerLabel(review)}</p>
-                    )}
-                    {review.reviewer?.is_founding_mentor ? (
-                      <FoundingMentorBadge />
-                    ) : null}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
+                  {review.reviewer?.username ? (
+                    <Link
+                      href={`/u/${review.reviewer.username}`}
+                      className="text-sm font-medium hover:underline"
+                    >
+                      {reviewerLabel(review)}
+                    </Link>
+                  ) : (
+                    <p className="text-sm font-medium">{reviewerLabel(review)}</p>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {formatDiscoverDate(review.created_at)}
                   </p>
                 </div>
@@ -64,6 +59,10 @@ export function ReviewList({
                   {review.rating}/5
                 </p>
               </div>
+
+              {review.reviewer?.is_founding_mentor ? (
+                <FoundingMentorCredential className="max-w-none" />
+              ) : null}
 
               {review.what_works_well ? (
                 <section className="space-y-1">

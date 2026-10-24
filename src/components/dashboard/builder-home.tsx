@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
+import { FOUNDING_MENTOR_THANKS } from "@/lib/mentors/copy";
 import { FirstRun } from "@/components/onboarding/first-run";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ReputationCard } from "@/components/reputation/reputation-card";
@@ -90,6 +92,10 @@ export function BuilderHome({
           <p className="text-sm text-muted-foreground">@{profile.username}</p>
         ) : null}
       </section>
+
+      {profile?.is_founding_mentor ? (
+        <FoundingMentorCredential statement={FOUNDING_MENTOR_THANKS} />
+      ) : null}
 
       <FirstRun
         profilePercent={completion.percent}

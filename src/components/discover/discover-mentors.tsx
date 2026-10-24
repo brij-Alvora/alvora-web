@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 import { ExpertiseList } from "@/components/mentors/expertise-list";
-import { FoundingMentorBadge } from "@/components/mentors/founding-mentor-badge";
+import { FoundingMentorMark } from "@/components/mentors/founding-mentor-credential";
+import { FOUNDING_MENTOR_STATEMENT } from "@/lib/mentors/copy";
 import { builderLabel, type DiscoverMentor } from "@/lib/discover/queries";
 import { hasProfileValue } from "@/lib/profile/presentation";
 import { getInitials } from "@/lib/utils";
@@ -29,13 +30,15 @@ export function DiscoverMentors({
     <ul className="grid gap-3 sm:grid-cols-2">
       {mentors.map((mentor) => {
         const name = builderLabel(mentor.profile);
-        const reviewLabel =
-          mentor.reviewsGiven === 1 ? "1 review given" : `${mentor.reviewsGiven} reviews given`;
+        const statement = hasProfileValue(mentor.profile.headline)
+          ? mentor.profile.headline
+          : FOUNDING_MENTOR_STATEMENT;
         return (
           <li key={mentor.profile.id}>
             <Link href={`/u/${mentor.profile.username}`} className="block h-full">
-              <Card className="h-full shadow-sm transition-colors hover:bg-accent/40">
+              <Card className="h-full border-[#e0d0a4] bg-card shadow-sm">
                 <CardContent className="space-y-3 p-4">
+                  <FoundingMentorMark />
                   <div className="flex items-start gap-3">
                     <Avatar className="h-11 w-11 border border-border">
                       {hasProfileValue(mentor.profile.avatar_url) ? (
@@ -45,21 +48,17 @@ export function DiscoverMentors({
                         {getInitials(name)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate font-medium">{name}</p>
-                        <FoundingMentorBadge />
-                      </div>
-                      {hasProfileValue(mentor.profile.headline) ? (
-                        <p className="line-clamp-2 text-sm text-muted-foreground">
-                          {mentor.profile.headline}
-                        </p>
-                      ) : null}
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-foreground">{name}</p>
+                      <p className="text-xs font-medium text-[#8d7344]">
+                        Invited expert reviewer
+                      </p>
                     </div>
                   </div>
                   <ExpertiseList areas={mentor.profile.expertise} />
-                  <p className="text-sm text-muted-foreground">
-                    {mentor.level} · {mentor.points} pts · {reviewLabel}
+                  <p className="text-sm leading-6 text-muted-foreground">{statement}</p>
+                  <p className="text-xs font-medium tracking-wide text-[#8d7344]">
+                    Founding Cohort 2026
                   </p>
                 </CardContent>
               </Card>

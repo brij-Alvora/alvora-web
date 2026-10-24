@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AdminFields } from "@/components/admin/admin-fields";
 import { UserActions } from "@/components/admin/user-actions";
-import { FoundingMentorBadge } from "@/components/mentors/founding-mentor-badge";
+import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
 import { getAdminModerationActions } from "@/lib/admin/alerts";
 import {
   getAdminProjects,
@@ -75,11 +75,15 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {row.profile.role === "admin" ? "Admin" : "User"}
             </p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <h2 className="text-2xl font-semibold tracking-tight">{name}</h2>
-              {row.profile.is_founding_mentor ? <FoundingMentorBadge /> : null}
-            </div>
-            <p className="text-sm text-muted-foreground">@{row.profile.username}</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight">{name}</h2>
+            {row.profile.is_founding_mentor ? (
+              <div className="mt-3">
+                <FoundingMentorCredential />
+              </div>
+            ) : null}
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              @{row.profile.username}
+            </p>
           </div>
           <AdminFields
             items={[
