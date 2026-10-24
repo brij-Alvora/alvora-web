@@ -36,6 +36,8 @@ function memberProfile(overrides: Partial<Profile> = {}): Profile {
     account_status: "active",
     is_founding_mentor: false,
     expertise: [],
+    mentor_statement: null,
+    why_i_mentor: null,
     created_at: "2026-01-01",
     updated_at: "2026-01-01",
     ...overrides,

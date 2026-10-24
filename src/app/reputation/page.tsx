@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { FoundingMentorStatus } from "@/components/mentors/founding-mentor-status";
 import { ReputationCard } from "@/components/reputation/reputation-card";
 import { ReputationHistory } from "@/components/reputation/reputation-history";
+import { getMentorContributionMap } from "@/lib/mentors/contributions";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { calculateReputation } from "@/lib/reputation/calculator";
 import { createClient } from "@/lib/supabase/server";
@@ -24,6 +25,10 @@ export default async function ReputationPage() {
     calculateReputation(user.id),
     getCurrentProfile(),
   ]);
+  const contributions =
+    profile?.is_founding_mentor === true
+      ? (await getMentorContributionMap([profile])).get(profile.id) ?? null
+      : null;
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -36,7 +41,14 @@ export default async function ReputationPage() {
           the sum of these events.
         </p>
       </div>
-      {profile?.is_founding_mentor ? <FoundingMentorStatus /> : null}
+      {profile?.is_founding_mentor ? (
+        <FoundingMentorStatus
+          expertise={profile.expertise}
+          mentorStatement={profile.mentor_statement}
+          whyIMentor={profile.why_i_mentor}
+          contributions={contributions}
+        />
+      ) : null}
       <ReputationCard
         totalPoints={reputation.total_points}
         level={reputation.level}

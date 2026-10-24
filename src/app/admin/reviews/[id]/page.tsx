@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminFields } from "@/components/admin/admin-fields";
-import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
+import { MentorAuthority } from "@/components/mentors/mentor-authority";
 import { ReviewModerationActions } from "@/components/admin/review-moderation-actions";
 import { getAdminReviewById } from "@/lib/admin/queries";
 import { formatDiscoverDate } from "@/lib/discover/format";
@@ -42,7 +42,11 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
             </h2>
             {reviewer?.is_founding_mentor ? (
               <div className="mt-3">
-                <FoundingMentorCredential />
+                <MentorAuthority
+                  expertise={reviewer.expertise}
+                  mentorStatement={reviewer.mentor_statement}
+                  credentialFirst
+                />
               </div>
             ) : null}
             <p className="text-sm text-muted-foreground">

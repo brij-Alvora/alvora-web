@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { AdminToolbar } from "@/components/admin/admin-toolbar";
-import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
+import { MentorAuthority } from "@/components/mentors/mentor-authority";
 import { ReviewModerationActions } from "@/components/admin/review-moderation-actions";
 import {
   compareDate,
@@ -96,7 +96,11 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                         </p>
                         {reviewer?.is_founding_mentor ? (
                           <div className="mt-2">
-                            <FoundingMentorCredential showStatement={false} />
+                            <MentorAuthority
+                              expertise={reviewer.expertise}
+                              mentorStatement={reviewer.mentor_statement}
+                              credentialFirst
+                            />
                           </div>
                         ) : null}
                         <p className="text-sm text-muted-foreground">

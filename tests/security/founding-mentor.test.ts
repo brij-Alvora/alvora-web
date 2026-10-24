@@ -86,6 +86,8 @@ describe("expertise", () => {
     });
     expect(profile?.is_founding_mentor).toBe(true);
     expect(profile?.expertise).toEqual(["AI agents"]);
+    expect(profile?.mentor_statement).toBeNull();
+    expect(profile?.why_i_mentor).toBeNull();
     expect(profile?.role).toBe("user");
   });
 });

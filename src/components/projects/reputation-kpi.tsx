@@ -63,11 +63,17 @@ export function ReputationKpi({
                 {points}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{level}</p>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                {fromValidations} from project validations
-                <br />
-                {fromReviews} from community reviews
-              </p>
+              {(fromValidations > 0 || fromReviews > 0) ? (
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  {fromValidations > 0
+                    ? `${fromValidations} from project validations`
+                    : null}
+                  {fromValidations > 0 && fromReviews > 0 ? <br /> : null}
+                  {fromReviews > 0
+                    ? `${fromReviews} from community reviews`
+                    : null}
+                </p>
+              ) : null}
             </Link>
             <Button
               type="button"

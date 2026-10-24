@@ -13,6 +13,11 @@ import {
   getReputationBand,
   isReputationEventType,
 } from "@/lib/reputation/rules";
+import {
+  EMPTY_MENTOR_CONTRIBUTIONS,
+  getMentorContributionMap,
+  type MentorContributionMetrics,
+} from "@/lib/mentors/contributions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile, Project, ReputationEvent } from "@/lib/supabase/types";
 import {
@@ -40,6 +45,7 @@ export type DiscoverMentor = {
   points: number;
   level: string;
   reviewsGiven: number;
+  contributions: MentorContributionMetrics;
 };
 
 export type DiscoverActivityItem = {
@@ -148,38 +154,23 @@ async function getFoundingMentors(limit = 20): Promise<DiscoverMentor[]> {
 
   const ids = [...new Set(profiles.flatMap(profileAuthIds))];
   const pointsByUser = new Map<string, number>();
-  const reviewsByUser = new Map<string, number>();
+  const [contributions, events] = await Promise.all([
+    getMentorContributionMap(profiles),
+    ids.length > 0
+      ? createAdminClient()
+          .from("reputation_events")
+          .select("user_id, points")
+          .in("user_id", ids)
+      : Promise.resolve({ data: [] }),
+  ]);
 
-  const admin = createAdminClient();
-  if (ids.length > 0) {
-    const { data: events } = await admin
-      .from("reputation_events")
-      .select("user_id, points")
-      .in("user_id", ids);
-    if (Array.isArray(events)) {
-      for (const row of events) {
-        const userId = typeof row.user_id === "string" ? row.user_id : "";
-        const points =
-          typeof row.points === "number" ? row.points : Number(row.points);
-        if (!userId || !Number.isFinite(points)) continue;
-        pointsByUser.set(userId, (pointsByUser.get(userId) ?? 0) + points);
-      }
-    }
-  }
-
-  if (ids.length > 0) {
-    const { data: reviews } = await supabase
-      .from("reviews")
-      .select("reviewer_id")
-      .in("reviewer_id", ids)
-      .eq("moderation_status", "visible");
-    if (Array.isArray(reviews)) {
-      for (const row of reviews) {
-        const reviewerId =
-          typeof row.reviewer_id === "string" ? row.reviewer_id : "";
-        if (!reviewerId) continue;
-        reviewsByUser.set(reviewerId, (reviewsByUser.get(reviewerId) ?? 0) + 1);
-      }
+  if (Array.isArray(events.data)) {
+    for (const row of events.data) {
+      const userId = typeof row.user_id === "string" ? row.user_id : "";
+      const points =
+        typeof row.points === "number" ? row.points : Number(row.points);
+      if (!userId || !Number.isFinite(points)) continue;
+      pointsByUser.set(userId, (pointsByUser.get(userId) ?? 0) + points);
     }
   }
 
@@ -190,19 +181,28 @@ async function getFoundingMentors(limit = 20): Promise<DiscoverMentor[]> {
         (total, id) => total + (pointsByUser.get(id) ?? 0),
         0,
       );
-      const reviewsGiven = keys.reduce(
-        (total, id) => total + (reviewsByUser.get(id) ?? 0),
-        0,
-      );
+      const mentorContributions =
+        contributions.get(profile.id) ?? EMPTY_MENTOR_CONTRIBUTIONS;
+      const authority =
+        (hasProfileValue(profile.mentor_statement) ? 2 : 0) +
+        (profile.expertise.length > 0 ? 1 : 0);
       return {
         profile,
         points,
         level: getReputationBand(points).name,
-        reviewsGiven,
+        reviewsGiven: mentorContributions.reviewsContributed,
+        contributions: mentorContributions,
+        authority,
       };
     })
-    .sort((a, b) => b.points - a.points || builderLabel(a.profile).localeCompare(builderLabel(b.profile)))
-    .slice(0, limit);
+    .sort(
+      (a, b) =>
+        b.authority - a.authority ||
+        b.contributions.reviewsContributed - a.contributions.reviewsContributed ||
+        builderLabel(a.profile).localeCompare(builderLabel(b.profile)),
+    )
+    .slice(0, limit)
+    .map(({ authority: _authority, ...mentor }) => mentor);
 }
 
 async function getRecentActivity(limit = 12): Promise<DiscoverActivityItem[]> {

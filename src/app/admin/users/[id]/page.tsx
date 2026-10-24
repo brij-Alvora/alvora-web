@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AdminFields } from "@/components/admin/admin-fields";
 import { UserActions } from "@/components/admin/user-actions";
-import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
+import { MentorAuthority } from "@/components/mentors/mentor-authority";
 import { getAdminModerationActions } from "@/lib/admin/alerts";
 import {
   getAdminProjects,
@@ -78,7 +78,14 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             <h2 className="mt-1 text-2xl font-semibold tracking-tight">{name}</h2>
             {row.profile.is_founding_mentor ? (
               <div className="mt-3">
-                <FoundingMentorCredential />
+                <MentorAuthority
+                  expertise={row.profile.expertise}
+                  mentorStatement={row.profile.mentor_statement}
+                  whyIMentor={row.profile.why_i_mentor}
+                  credentialFirst
+                  showQualified
+                  showWhyIMentor
+                />
               </div>
             ) : null}
             <p className="mt-1.5 text-sm text-muted-foreground">

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
+import { MentorAuthority } from "@/components/mentors/mentor-authority";
 import { AvatarUploader } from "@/components/profile/avatar-uploader";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { hasProfileValue } from "@/lib/profile/presentation";
@@ -46,7 +46,16 @@ export default async function EditProfilePage() {
         <p className="text-muted-foreground">
           This information appears on your public Alvora page.
         </p>
-        {profile?.is_founding_mentor ? <FoundingMentorCredential /> : null}
+        {profile?.is_founding_mentor ? (
+          <MentorAuthority
+            expertise={profile.expertise}
+            mentorStatement={profile.mentor_statement}
+            whyIMentor={profile.why_i_mentor}
+            credentialFirst
+            showQualified
+            showWhyIMentor
+          />
+        ) : null}
       </div>
 
       <Card>
@@ -65,7 +74,7 @@ export default async function EditProfilePage() {
         <CardHeader>
           <CardTitle>Builder identity</CardTitle>
           <CardDescription>
-            Name, headline, expertise, bio, location, and professional links.
+            Name, headline, expertise, mentor statement, bio, location, and professional links.
           </CardDescription>
         </CardHeader>
         <CardContent>

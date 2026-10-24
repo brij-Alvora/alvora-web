@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -8,7 +8,7 @@ import { upsertProfileAction } from "@/lib/actions/profile";
 import { formatExpertise } from "@/lib/mentors/expertise";
 import type { Profile } from "@/lib/supabase/types";
 import {
-  profileSchema,
+  profileSchemaFor,
   type ProfileFormValues,
 } from "@/lib/validations/profile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,12 +26,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const isFoundingMentor = profile?.is_founding_mentor === true;
+  const schema = useMemo(
+    () => profileSchemaFor(isFoundingMentor),
+    [isFoundingMentor],
+  );
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       username: profile?.username ?? "",
       full_name: profile?.full_name ?? "",
@@ -42,6 +47,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       github_url: profile?.github_url ?? "",
       linkedin_url: profile?.linkedin_url ?? "",
       expertise: formatExpertise(profile?.expertise),
+      mentor_statement: profile?.mentor_statement ?? "",
+      why_i_mentor: profile?.why_i_mentor ?? "",
     },
   });
 
@@ -103,7 +110,41 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="expertise">Expertise</Label>
+        <Label htmlFor="mentor_statement">Mentor statement</Label>
+        <Textarea
+          id="mentor_statement"
+          placeholder="I help founders validate AI products before they scale the wrong thing."
+          {...register("mentor_statement")}
+        />
+        <p className="text-xs text-muted-foreground">
+          {isFoundingMentor
+            ? "Required. One or two sentences on why a builder should request your review."
+            : "One or two sentences on what you are qualified to review. Shown with your Founding Mentor credential."}
+        </p>
+        {errors.mentor_statement && (
+          <p className="text-sm text-destructive">
+            {errors.mentor_statement.message}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="why_i_mentor">Why I Mentor</Label>
+        <Textarea
+          id="why_i_mentor"
+          placeholder="I mentor because early builders need a direct read on what is actually ready."
+          {...register("why_i_mentor")}
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional. What you want builders to understand about how you mentor.
+        </p>
+        {errors.why_i_mentor && (
+          <p className="text-sm text-destructive">{errors.why_i_mentor.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="expertise">Areas of Expertise</Label>
         <Input
           id="expertise"
           placeholder="Product, UX, AI agents"

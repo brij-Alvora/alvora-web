@@ -48,9 +48,44 @@ export const profileSchema = z.object({
     .max(400, "Expertise must be under 400 characters")
     .optional()
     .or(z.literal("")),
+  mentor_statement: z
+    .string()
+    .trim()
+    .max(280, "Mentor statement must be under 280 characters")
+    .optional()
+    .or(z.literal(""))
+    .refine(
+      (value) => !value || value.length >= 20,
+      "Mentor statement must be at least 20 characters.",
+    ),
+  why_i_mentor: z
+    .string()
+    .trim()
+    .max(400, "Why I Mentor must be under 400 characters")
+    .optional()
+    .or(z.literal(""))
+    .refine(
+      (value) => !value || value.length >= 20,
+      "Why I Mentor must be at least 20 characters.",
+    ),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
+
+export function profileSchemaFor(isFoundingMentor: boolean) {
+  if (!isFoundingMentor) return profileSchema;
+  return profileSchema.superRefine((values, ctx) => {
+    const statement = values.mentor_statement?.trim() ?? "";
+    if (statement.length < 20) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["mentor_statement"],
+        message:
+          "Founding Mentors need a mentor statement of at least 20 characters.",
+      });
+    }
+  });
+}
 
 export function normalizeProfileValues(values: ProfileFormValues) {
   const blankToNull = (value?: string) => {
@@ -73,5 +108,7 @@ export function normalizeProfileValues(values: ProfileFormValues) {
     github_url: blankToNull(values.github_url),
     linkedin_url: blankToNull(values.linkedin_url),
     expertise: expertise.areas,
+    mentor_statement: blankToNull(values.mentor_statement),
+    why_i_mentor: blankToNull(values.why_i_mentor),
   };
 }

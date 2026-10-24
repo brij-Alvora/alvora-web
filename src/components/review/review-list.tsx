@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
 
-import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
+import { MentorAuthority } from "@/components/mentors/mentor-authority";
 import { formatDiscoverDate } from "@/lib/discover/format";
 import type { ReviewWithReviewer } from "@/lib/review/queries";
 import { hasProfileValue } from "@/lib/profile/presentation";
@@ -61,7 +61,11 @@ export function ReviewList({
               </div>
 
               {review.reviewer?.is_founding_mentor ? (
-                <FoundingMentorCredential className="max-w-none" />
+                <MentorAuthority
+                  expertise={review.reviewer.expertise}
+                  mentorStatement={review.reviewer.mentor_statement}
+                  credentialFirst
+                />
               ) : null}
 
               {review.what_works_well ? (

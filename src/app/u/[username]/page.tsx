@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProfileView } from "@/components/profile/profile-view";
+import { getMentorContributionMap } from "@/lib/mentors/contributions";
 import { getCurrentProfile, getProfileByUsername } from "@/lib/profile/queries";
 import { getPublishedProjectsByOwner } from "@/lib/project/queries";
 import { calculateReputation } from "@/lib/reputation/calculator";
@@ -41,10 +42,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
   }
 
   const ownerId = profile.user_id ?? profile.id;
-  const [reputation, published, current] = await Promise.all([
+  const [reputation, published, current, contributions] = await Promise.all([
     calculateReputation(ownerId),
     getPublishedProjectsByOwner(ownerId),
     getCurrentProfile(),
+    profile.is_founding_mentor
+      ? getMentorContributionMap([profile])
+      : Promise.resolve(null),
   ]);
 
   const projects: DiscoverProject[] = published.map((project) => ({
@@ -62,6 +66,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
         profile={profile}
         reputation={reputation}
         projects={projects}
+        contributions={contributions?.get(profile.id) ?? null}
         isOwner={Boolean(isOwner)}
       />
     </div>

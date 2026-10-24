@@ -25,6 +25,7 @@ type KpiItem = {
   href: string;
   icon: LucideIcon;
   focus?: WorkspaceFocus | "given";
+  hideWhenZero?: boolean;
 };
 
 export function WorkspaceKpis({ totals, focus }: WorkspaceKpisProps) {
@@ -56,6 +57,7 @@ export function WorkspaceKpis({ totals, focus }: WorkspaceKpisProps) {
       href: "/projects/given",
       icon: PenLine,
       focus: "given",
+      hideWhenZero: true,
     },
     {
       label: "Needs Attention",
@@ -74,7 +76,9 @@ export function WorkspaceKpis({ totals, focus }: WorkspaceKpisProps) {
         fromValidations={totals.reputationFromProjects}
         fromReviews={totals.reputationFromReviews}
       />
-      {items.map((item) => {
+      {items
+        .filter((item) => !item.hideWhenZero || Number(item.value) > 0)
+        .map((item) => {
         const Icon = item.icon;
         const active = item.focus === focus;
         return (

@@ -34,6 +34,8 @@ export type Profile = {
   account_status: AccountStatus;
   is_founding_mentor: boolean;
   expertise: string[];
+  mentor_statement: string | null;
+  why_i_mentor: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -57,6 +59,8 @@ export type ProfileInsert = {
   account_status?: AccountStatus;
   is_founding_mentor?: boolean;
   expertise?: string[];
+  mentor_statement?: string | null;
+  why_i_mentor?: string | null;
   created_at?: string;
   updated_at?: string;
 };

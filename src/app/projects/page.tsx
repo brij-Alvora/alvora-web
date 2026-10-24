@@ -14,6 +14,8 @@ import { getWorkspaceDashboard } from "@/lib/projects/workspace";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "My Projects · Alvora",
 };
@@ -90,10 +92,12 @@ export default async function MyProjectsPage({ searchParams }: PageProps) {
         <WorkspaceFeed items={dashboard.feed} />
       </div>
 
-      <ContributionList
-        contributions={dashboard.contributions.slice(0, 6)}
-        href="/projects/given"
-      />
+      {dashboard.contributions.length > 0 ? (
+        <ContributionList
+          contributions={dashboard.contributions.slice(0, 6)}
+          href="/projects/given"
+        />
+      ) : null}
     </div>
   );
 }

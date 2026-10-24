@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { MentorAuthority } from "@/components/mentors/mentor-authority";
 import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
 import { FOUNDING_MENTOR_THANKS } from "@/lib/mentors/copy";
 import { FirstRun } from "@/components/onboarding/first-run";
@@ -69,11 +70,15 @@ export function BuilderHome({
       value: stats.reviewsReceived,
       icon: Inbox,
     },
-    {
-      label: "Reviews submitted",
-      value: stats.reviewsSubmitted,
-      icon: Send,
-    },
+    ...(stats.reviewsSubmitted > 0
+      ? [
+          {
+            label: "Reviews submitted",
+            value: stats.reviewsSubmitted,
+            icon: Send,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -94,7 +99,29 @@ export function BuilderHome({
       </section>
 
       {profile?.is_founding_mentor ? (
-        <FoundingMentorCredential statement={FOUNDING_MENTOR_THANKS} />
+        <div className="max-w-xl space-y-4">
+          <FoundingMentorCredential statement={FOUNDING_MENTOR_THANKS} />
+          <MentorAuthority
+            expertise={profile.expertise}
+            mentorStatement={profile.mentor_statement}
+            whyIMentor={profile.why_i_mentor}
+            showCredential={false}
+            showQualified
+            showWhyIMentor
+          />
+          {profile.expertise.length === 0 || !profile.mentor_statement ? (
+            <p className="text-sm leading-6 text-muted-foreground">
+              <Link href="/profile/edit" className="font-medium text-foreground hover:underline">
+                {profile.expertise.length === 0 && !profile.mentor_statement
+                  ? "Add the areas you review and a mentor statement"
+                  : profile.mentor_statement
+                    ? "Add the areas you review"
+                    : "Add a mentor statement"}
+              </Link>{" "}
+              so builders know why your feedback is worth requesting.
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       <FirstRun

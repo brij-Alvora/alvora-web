@@ -14,7 +14,7 @@ import type { Profile } from "@/lib/supabase/types";
 import { stripPrivilegedProfileFields } from "@/lib/security/profile-privileges";
 import {
   normalizeProfileValues,
-  profileSchema,
+  profileSchemaFor,
   type ProfileFormValues,
 } from "@/lib/validations/profile";
 
@@ -37,11 +37,6 @@ export async function getProfileByUsername(
 export async function upsertProfileAction(
   input: ProfileFormValues,
 ): Promise<ProfileActionResult> {
-  const parsed = profileSchema.safeParse(input);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
@@ -51,9 +46,16 @@ export async function upsertProfileAction(
     return { error: "You must be signed in to update your profile" };
   }
 
+  const existing = await queryCurrentProfile();
+  const parsed = profileSchemaFor(existing?.is_founding_mentor === true).safeParse(
+    input,
+  );
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
   const normalized = normalizeProfileValues(parsed.data);
   if ("error" in normalized) return { error: normalized.error };
-  const existing = await queryCurrentProfile();
 
   const { data: taken } = await supabase
     .from("profiles")
@@ -80,6 +82,8 @@ export async function upsertProfileAction(
     github_url: normalized.github_url,
     linkedin_url: normalized.linkedin_url,
     expertise: normalized.expertise,
+    mentor_statement: normalized.mentor_statement,
+    why_i_mentor: normalized.why_i_mentor,
     updated_at: new Date().toISOString(),
   });
 

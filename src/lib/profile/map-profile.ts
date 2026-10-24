@@ -54,6 +54,8 @@ export function mapProfile(row: Record<string, unknown> | null): Profile | null 
         : "active",
     is_founding_mentor: row.is_founding_mentor === true,
     expertise: asExpertise(row.expertise),
+    mentor_statement: asNullableString(row.mentor_statement),
+    why_i_mentor: asNullableString(row.why_i_mentor),
     created_at: asRequiredString(row.created_at),
     updated_at: asRequiredString(row.updated_at, asRequiredString(row.created_at)),
   };

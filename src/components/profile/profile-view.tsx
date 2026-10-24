@@ -3,9 +3,9 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
 import { DiscoverProjectCard } from "@/components/discover/discover-project-card";
-import { ExpertiseList } from "@/components/mentors/expertise-list";
-import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
+import { MentorAuthority } from "@/components/mentors/mentor-authority";
 import { RecentAchievements } from "@/components/reputation/recent-achievements";
+import type { MentorContributionMetrics } from "@/lib/mentors/contributions";
 import type { DiscoverProject } from "@/lib/discover/queries";
 import type { ReputationSnapshot } from "@/lib/reputation/calculator";
 import type { Profile } from "@/lib/supabase/types";
@@ -24,6 +24,7 @@ type ProfileViewProps = {
   profile: Profile;
   reputation: ReputationSnapshot;
   projects?: DiscoverProject[];
+  contributions?: MentorContributionMetrics | null;
   isOwner?: boolean;
 };
 
@@ -38,6 +39,7 @@ export function ProfileView({
   profile,
   reputation,
   projects = [],
+  contributions = null,
   isOwner = false,
 }: ProfileViewProps) {
   const displayName = hasProfileValue(profile.full_name)
@@ -96,7 +98,15 @@ export function ProfileView({
               </h1>
               {profile.is_founding_mentor ? (
                 <div className="mt-3">
-                  <FoundingMentorCredential />
+                  <MentorAuthority
+                    expertise={profile.expertise}
+                    mentorStatement={profile.mentor_statement}
+                    whyIMentor={profile.why_i_mentor}
+                    contributions={contributions}
+                    credentialFirst
+                    showQualified
+                    showWhyIMentor
+                  />
                 </div>
               ) : null}
               <p className="mt-1.5 text-sm text-muted-foreground sm:text-base">
@@ -108,15 +118,6 @@ export function ProfileView({
               <p className="max-w-2xl text-[0.95rem] leading-relaxed text-foreground/85 sm:text-lg">
                 {profile.headline}
               </p>
-            ) : null}
-
-            {profile.is_founding_mentor && profile.expertise.length > 0 ? (
-              <div className="space-y-1.5">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Expertise
-                </p>
-                <ExpertiseList areas={profile.expertise} />
-              </div>
             ) : null}
 
             {hasProfileValue(profile.location) ? (
