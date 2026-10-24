@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
 import { Button } from "@/components/ui/button";
 import { getCurrentProfile } from "@/lib/profile/queries";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Become a Founding Mentor · Alvora",
@@ -49,11 +50,45 @@ const AUDIENCES = [
   },
 ] as const;
 
-function InvitationActions({ isMentor }: { isMentor: boolean }) {
+const APPROVAL_COPY =
+  "Founding Mentor status is granted to selected members of the Beta Cohort after review by the Alvora team.";
+
+const STEPS = [
+  {
+    title: "Invitation",
+    body: "A personal invitation starts the conversation. It does not add the credential.",
+  },
+  {
+    title: "Create account or sign in",
+    body: "Use the account that will carry your public profile.",
+  },
+  {
+    title: "Profile setup",
+    body: "Add your expertise, mentor statement, and why you mentor.",
+  },
+  {
+    title: "Mentor approval",
+    body: "The Alvora team reviews selected members of the Beta Cohort.",
+  },
+  {
+    title: "Founding Mentor recognition",
+    body: "The credential appears on your profile only after that approval.",
+  },
+] as const;
+
+function InvitationActions({
+  isMentor,
+  isSignedIn,
+}: {
+  isMentor: boolean;
+  isSignedIn: boolean;
+}) {
   if (isMentor) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">You are in Beta Cohort 2026.</p>
+        <p className="text-sm text-muted-foreground">
+          Your Founding Mentor status is already approved for Beta Cohort 2026.
+        </p>
         <Button asChild size="lg">
           <Link href="/profile/edit">Complete your mentor profile</Link>
         </Button>
@@ -61,27 +96,41 @@ function InvitationActions({ isMentor }: { isMentor: boolean }) {
     );
   }
 
+  const href = isSignedIn ? "/profile/edit" : "/login?next=/profile/edit";
+
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-3">
-        <Button asChild size="lg">
-          <Link href="/login?next=/profile/edit">Accept Invitation</Link>
-        </Button>
-        <Button asChild size="lg" variant="outline">
-          <Link href="/login?next=/profile/edit">Join Founding Cohort</Link>
-        </Button>
-      </div>
+      <Button asChild size="lg">
+        <Link href={href}>Continue as an Invited Mentor</Link>
+      </Button>
       <p className="max-w-md text-sm leading-6 text-muted-foreground">
-        Sign in with the account that received the invitation. The cohort is
-        selected personally.
+        {APPROVAL_COPY}
       </p>
+      {isSignedIn ? (
+        <p className="max-w-md text-sm leading-6 text-muted-foreground">
+          Finish your profile next. Completing it does not add the credential.
+        </p>
+      ) : (
+        <p className="max-w-md text-sm leading-6 text-muted-foreground">
+          <Link href="/register" className="font-medium text-foreground hover:underline">
+            Create an account
+          </Link>{" "}
+          or sign in, then complete your profile. The credential follows
+          approval.
+        </p>
+      )}
     </div>
   );
 }
 
 export default async function FoundingMentorsPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const profile = await getCurrentProfile();
   const isMentor = profile?.is_founding_mentor === true;
+  const isSignedIn = Boolean(user);
 
   return (
     <main className="flex-1">
@@ -100,7 +149,28 @@ export default async function FoundingMentorsPage() {
               arrives.
             </p>
           </div>
-          <InvitationActions isMentor={isMentor} />
+          <InvitationActions isMentor={isMentor} isSignedIn={isSignedIn} />
+        </section>
+
+        <section className="max-w-2xl space-y-6">
+          <h2 className="font-display text-3xl tracking-tight">
+            How recognition is granted
+          </h2>
+          <ol className="space-y-4">
+            {STEPS.map((step, index) => (
+              <li key={step.title} className="flex gap-4">
+                <span className="mt-0.5 text-sm font-medium tabular-nums text-primary">
+                  {index + 1}
+                </span>
+                <div>
+                  <p className="font-medium text-foreground">{step.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    {step.body}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <section className="max-w-2xl space-y-4">
@@ -184,9 +254,9 @@ export default async function FoundingMentorsPage() {
             </p>
             <p>
               The credential sits on your public profile, on Discover, and
-              beside reviews you write. Builders see who selected you to set
-              the standard. Your builder standing stays separate, and it comes
-              from work.
+              beside reviews you write after the Alvora team grants it.
+              Builders see who was selected to set the standard. Your builder
+              standing stays separate, and it comes from work.
             </p>
           </div>
         </section>
@@ -219,13 +289,13 @@ export default async function FoundingMentorsPage() {
 
         <section className="max-w-2xl space-y-4 border-t border-border pt-12">
           <h2 className="font-display text-3xl tracking-tight">
-            Accept the invitation
+            Continue your invitation
           </h2>
           <p className="text-base leading-7 text-muted-foreground">
-            Join the founding cohort and help decide what a trusted review
-            looks like on Alvora.
+            Set up the profile the Alvora team will review. Recognition is
+            added only after that review.
           </p>
-          <InvitationActions isMentor={isMentor} />
+          <InvitationActions isMentor={isMentor} isSignedIn={isSignedIn} />
         </section>
       </div>
     </main>
