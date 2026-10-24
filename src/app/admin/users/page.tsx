@@ -35,6 +35,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   const country = firstParam(params, "country");
   const city = firstParam(params, "city");
   const region = firstParam(params, "region");
+  const mentor = firstParam(params, "mentor");
   const users = await getAdminUsers();
 
   const filtered = users
@@ -46,6 +47,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         row.profile.headline,
         row.level,
         row.profile.account_status,
+        row.profile.is_founding_mentor ? "founding mentor" : "",
+        ...row.profile.expertise,
         countryLabel(place),
         cityLabel(place),
       ]
@@ -57,6 +60,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
       if (country && countryLabel(place) !== country) return false;
       if (city && cityLabel(place) !== city) return false;
       if (region && regionLabel(place) !== region) return false;
+      if (mentor === "founding" && !row.profile.is_founding_mentor) return false;
       return true;
     })
     .sort((a, b) => {
@@ -90,6 +94,13 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
           { value: "name", label: "Name" },
           { value: "reputation", label: "Reputation" },
         ]}
+        filters={[
+          {
+            name: "mentor",
+            label: "All users",
+            options: [{ value: "founding", label: "Founding Mentors" }],
+          },
+        ]}
       />
       {filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
@@ -115,12 +126,14 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                       ? ` · ${row.profile.account_status}`
                       : ""}
                     {row.profile.role === "admin" ? " · Admin" : ""}
+                    {row.profile.is_founding_mentor ? " · Founding Mentor" : ""}
                   </p>
                 </div>
                 <UserActions
                   profileId={row.profile.id}
                   username={row.profile.username}
                   status={row.profile.account_status}
+                  isFoundingMentor={row.profile.is_founding_mentor}
                 />
               </CardContent>
             </Card>

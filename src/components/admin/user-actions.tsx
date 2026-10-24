@@ -4,22 +4,38 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { setAccountStatusAction } from "@/lib/actions/admin";
+import {
+  setAccountStatusAction,
+  setFoundingMentorAction,
+} from "@/lib/actions/admin";
+import { formatExpertise } from "@/lib/mentors/expertise";
 import { toast } from "@/lib/toast";
 import type { AccountStatus } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type UserActionsProps = {
   profileId: string;
   username: string;
   status: AccountStatus;
+  isFoundingMentor: boolean;
+  expertise?: string[];
 };
 
-export function UserActions({ profileId, username, status }: UserActionsProps) {
+export function UserActions({
+  profileId,
+  username,
+  status,
+  isFoundingMentor,
+  expertise,
+}: UserActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [reason, setReason] = useState("");
+  const [expertiseText, setExpertiseText] = useState(
+    formatExpertise(expertise),
+  );
 
   const run = (next: AccountStatus) => {
     startTransition(async () => {
@@ -27,6 +43,19 @@ export function UserActions({ profileId, username, status }: UserActionsProps) {
       if (result.error) toast(result.error, "error");
       else toast(result.success ?? "Updated");
       setReason("");
+      router.refresh();
+    });
+  };
+
+  const setMentor = (next: boolean, includeExpertise: boolean) => {
+    startTransition(async () => {
+      const result = await setFoundingMentorAction(
+        profileId,
+        next,
+        includeExpertise ? expertiseText : undefined,
+      );
+      if (result.error) toast(result.error, "error");
+      else toast(result.success ?? "Updated");
       router.refresh();
     });
   };
@@ -87,6 +116,51 @@ export function UserActions({ profileId, username, status }: UserActionsProps) {
             Reactivate
           </Button>
         ) : null}
+      </div>
+      <div className="space-y-2 border-t border-border pt-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Founding Mentor
+        </p>
+        {expertise ? (
+          <div className="space-y-2">
+            <Label htmlFor={`expertise-${profileId}`}>Expertise</Label>
+            <Input
+              id={`expertise-${profileId}`}
+              value={expertiseText}
+              onChange={(event) => setExpertiseText(event.target.value)}
+              placeholder="Product, UX, AI agents"
+              className="max-w-sm"
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isPending}
+              onClick={() => setMentor(isFoundingMentor, true)}
+            >
+              Save expertise
+            </Button>
+          </div>
+        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {isFoundingMentor ? (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isPending}
+              onClick={() => setMentor(false, false)}
+            >
+              Remove Founding Mentor
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              disabled={isPending}
+              onClick={() => setMentor(true, expertise !== undefined)}
+            >
+              Mark as Founding Mentor
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

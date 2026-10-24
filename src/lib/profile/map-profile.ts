@@ -10,6 +10,15 @@ function asRequiredString(value: unknown, fallback = ""): string {
   return asNullableString(value) ?? fallback;
 }
 
+function asExpertise(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+    .slice(0, 8);
+}
+
 /**
  * Maps a raw Supabase `profiles` row onto the app Profile shape.
  * Reads live column names only — never injects mock content.
@@ -43,6 +52,8 @@ export function mapProfile(row: Record<string, unknown> | null): Profile | null 
       row.account_status === "banned"
         ? row.account_status
         : "active",
+    is_founding_mentor: row.is_founding_mentor === true,
+    expertise: asExpertise(row.expertise),
     created_at: asRequiredString(row.created_at),
     updated_at: asRequiredString(row.updated_at, asRequiredString(row.created_at)),
   };

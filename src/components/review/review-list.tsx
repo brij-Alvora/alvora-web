@@ -1,6 +1,7 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
 
+import { FoundingMentorBadge } from "@/components/mentors/founding-mentor-badge";
 import { formatDiscoverDate } from "@/lib/discover/format";
 import type { ReviewWithReviewer } from "@/lib/review/queries";
 import { hasProfileValue } from "@/lib/profile/presentation";
@@ -39,16 +40,21 @@ export function ReviewList({
             <CardContent className="space-y-4 p-5">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  {review.reviewer?.username ? (
-                    <Link
-                      href={`/u/${review.reviewer.username}`}
-                      className="text-sm font-medium hover:underline"
-                    >
-                      {reviewerLabel(review)}
-                    </Link>
-                  ) : (
-                    <p className="text-sm font-medium">{reviewerLabel(review)}</p>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {review.reviewer?.username ? (
+                      <Link
+                        href={`/u/${review.reviewer.username}`}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {reviewerLabel(review)}
+                      </Link>
+                    ) : (
+                      <p className="text-sm font-medium">{reviewerLabel(review)}</p>
+                    )}
+                    {review.reviewer?.is_founding_mentor ? (
+                      <FoundingMentorBadge />
+                    ) : null}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {formatDiscoverDate(review.created_at)}
                   </p>

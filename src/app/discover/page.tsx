@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { DiscoverActivity } from "@/components/discover/discover-activity";
 import { DiscoverBuilders } from "@/components/discover/discover-builders";
+import { DiscoverMentors } from "@/components/discover/discover-mentors";
 import { DiscoverProjectCard } from "@/components/discover/discover-project-card";
 import { DiscoverRequestList } from "@/components/discover/discover-request-list";
 import { firstParam, matchesQuery, type SearchValues } from "@/lib/admin/params";
@@ -56,6 +57,19 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
       q,
     ),
   );
+  const mentors = feed.foundingMentors.filter((row) =>
+    matchesQuery(
+      [
+        row.profile.username,
+        row.profile.full_name,
+        row.profile.headline,
+        ...row.profile.expertise,
+      ]
+        .filter(Boolean)
+        .join(" "),
+      q,
+    ),
+  );
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-10 px-4 py-8 sm:px-6 sm:py-10">
@@ -76,6 +90,25 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
           </Button>
         </form>
       </div>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Featured Founding Mentors
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            The closed-beta mentor cohort.
+          </p>
+        </div>
+        <DiscoverMentors
+          mentors={mentors}
+          emptyMessage={
+            q && feed.foundingMentors.length > 0
+              ? "No founding mentors match this search."
+              : "No founding mentors yet."
+          }
+        />
+      </section>
 
       <section className="space-y-3">
         <div>

@@ -34,6 +34,8 @@ function memberProfile(overrides: Partial<Profile> = {}): Profile {
     reputation_score: 10,
     role: "user",
     account_status: "active",
+    is_founding_mentor: false,
+    expertise: [],
     created_at: "2026-01-01",
     updated_at: "2026-01-01",
     ...overrides,
@@ -92,6 +94,7 @@ describe("privilege escalation is impossible for members", () => {
       role: "user",
       account_status: "active",
       reputation_score: null,
+      is_founding_mentor: false,
     });
   });
 

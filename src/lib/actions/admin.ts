@@ -12,6 +12,7 @@ import {
 import { logModerationAction } from "@/lib/admin/log";
 import { createNotification } from "@/lib/notifications/create";
 import { getReviewerIdsForRequest, notifyUsers } from "@/lib/notifications/dispatch";
+import { parseExpertiseInput } from "@/lib/mentors/expertise";
 import { mapProfile } from "@/lib/profile/map-profile";
 import { awardValidationCompleted } from "@/lib/reputation/award";
 import {
@@ -151,6 +152,70 @@ export async function setAccountStatusAction(
     banned: "User banned",
   };
   return { success: labels[status] };
+}
+
+export async function setFoundingMentorAction(
+  profileId: string,
+  isFoundingMentor: boolean,
+  expertiseInput?: string,
+): Promise<AdminActionResult> {
+  const { user } = await requireAdmin();
+  if (typeof isFoundingMentor !== "boolean") {
+    return { error: "Invalid founding mentor flag" };
+  }
+
+  const mapped = await authUserIdForProfile(profileId);
+  if (!mapped) return { error: "User not found" };
+
+  const update: {
+    is_founding_mentor: boolean;
+    updated_at: string;
+    expertise?: string[];
+  } = {
+    is_founding_mentor: isFoundingMentor,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (expertiseInput !== undefined) {
+    const expertise = parseExpertiseInput(expertiseInput);
+    if ("error" in expertise) return { error: expertise.error };
+    update.expertise = expertise.areas;
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update(update)
+    .eq("id", mapped.profile.id);
+
+  if (error) {
+    return { error: toUserSafeError(error, "Could not update founding mentor") };
+  }
+
+  const flagChanged = mapped.profile.is_founding_mentor !== isFoundingMentor;
+  await logModerationAction({
+    adminId: user.id,
+    entityType: "user",
+    entityId: mapped.profile.id,
+    action: flagChanged
+      ? isFoundingMentor
+        ? "mark_founding_mentor"
+        : "remove_founding_mentor"
+      : "update_mentor_expertise",
+  });
+
+  revalidateAdmin();
+  revalidatePath(`/admin/users/${mapped.profile.id}`);
+  revalidatePath(`/u/${mapped.profile.username}`);
+
+  if (!flagChanged && expertiseInput !== undefined) {
+    return { success: "Expertise saved" };
+  }
+  return {
+    success: isFoundingMentor
+      ? "Marked as Founding Mentor"
+      : "Founding Mentor removed",
+  };
 }
 
 export async function adminUpdateValidationStatusAction(

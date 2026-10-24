@@ -13,6 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Edit profile · Alvora",
 };
@@ -61,7 +63,7 @@ export default async function EditProfilePage() {
         <CardHeader>
           <CardTitle>Builder identity</CardTitle>
           <CardDescription>
-            Name, headline, bio, location, and professional links.
+            Name, headline, expertise, bio, location, and professional links.
           </CardDescription>
         </CardHeader>
         <CardContent>

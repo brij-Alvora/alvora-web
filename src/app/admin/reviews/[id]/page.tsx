@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminFields } from "@/components/admin/admin-fields";
+import { FoundingMentorBadge } from "@/components/mentors/founding-mentor-badge";
 import { ReviewModerationActions } from "@/components/admin/review-moderation-actions";
 import { getAdminReviewById } from "@/lib/admin/queries";
 import { formatDiscoverDate } from "@/lib/discover/format";
@@ -36,9 +37,12 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Review
             </p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-              {review.rating}/5 · {reviewerName}
-            </h2>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-semibold tracking-tight">
+                {review.rating}/5 · {reviewerName}
+              </h2>
+              {reviewer?.is_founding_mentor ? <FoundingMentorBadge /> : null}
+            </div>
             <p className="text-sm text-muted-foreground">
               {review.project?.title ?? "Project"}
             </p>

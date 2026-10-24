@@ -2,12 +2,14 @@ export const PRIVILEGED_PROFILE_FIELDS = [
   "role",
   "account_status",
   "reputation_score",
+  "is_founding_mentor",
 ] as const;
 
 export type ProfilePrivilegeRow = {
   role: "user" | "admin";
   account_status: "active" | "warned" | "suspended" | "banned";
   reputation_score?: number | null;
+  is_founding_mentor?: boolean;
 };
 
 export function isServiceRoleActor(role: string | null | undefined) {
@@ -33,6 +35,7 @@ export function applyProfilePrivilegeLock(input: {
       role: "user",
       account_status: "active",
       reputation_score: input.newRow.reputation_score ?? null,
+      is_founding_mentor: false,
     };
   }
 
@@ -40,6 +43,7 @@ export function applyProfilePrivilegeLock(input: {
     role: input.oldRow?.role ?? "user",
     account_status: input.oldRow?.account_status ?? "active",
     reputation_score: input.oldRow?.reputation_score ?? null,
+    is_founding_mentor: input.oldRow?.is_founding_mentor ?? false,
   };
 }
 

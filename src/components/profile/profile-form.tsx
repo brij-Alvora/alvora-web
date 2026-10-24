@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { upsertProfileAction } from "@/lib/actions/profile";
+import { formatExpertise } from "@/lib/mentors/expertise";
 import type { Profile } from "@/lib/supabase/types";
 import {
   profileSchema,
@@ -40,6 +41,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       website: profile?.website ?? "",
       github_url: profile?.github_url ?? "",
       linkedin_url: profile?.linkedin_url ?? "",
+      expertise: formatExpertise(profile?.expertise),
     },
   });
 
@@ -97,6 +99,22 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         />
         {errors.headline && (
           <p className="text-sm text-destructive">{errors.headline.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="expertise">Expertise</Label>
+        <Input
+          id="expertise"
+          placeholder="Product, UX, AI agents"
+          {...register("expertise")}
+        />
+        <p className="text-xs text-muted-foreground">
+          Up to 8 areas, separated by commas. Shown publicly when you are a
+          Founding Mentor.
+        </p>
+        {errors.expertise && (
+          <p className="text-sm text-destructive">{errors.expertise.message}</p>
         )}
       </div>
 

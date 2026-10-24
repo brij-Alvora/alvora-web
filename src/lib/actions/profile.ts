@@ -52,6 +52,7 @@ export async function upsertProfileAction(
   }
 
   const normalized = normalizeProfileValues(parsed.data);
+  if ("error" in normalized) return { error: normalized.error };
   const existing = await queryCurrentProfile();
 
   const { data: taken } = await supabase
@@ -78,6 +79,7 @@ export async function upsertProfileAction(
     website: normalized.website,
     github_url: normalized.github_url,
     linkedin_url: normalized.linkedin_url,
+    expertise: normalized.expertise,
     updated_at: new Date().toISOString(),
   });
 
@@ -122,6 +124,7 @@ export async function upsertProfileAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/profile/edit");
+  revalidatePath("/discover");
   revalidatePath(`/u/${profile.username}`);
   if (existing?.username && existing.username !== profile.username) {
     revalidatePath(`/u/${existing.username}`);

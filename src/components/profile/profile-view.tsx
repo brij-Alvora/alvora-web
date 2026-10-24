@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
 import { DiscoverProjectCard } from "@/components/discover/discover-project-card";
+import { ExpertiseList } from "@/components/mentors/expertise-list";
+import { FoundingMentorBadge } from "@/components/mentors/founding-mentor-badge";
 import { RecentAchievements } from "@/components/reputation/recent-achievements";
 import type { DiscoverProject } from "@/lib/discover/queries";
 import type { ReputationSnapshot } from "@/lib/reputation/calculator";
@@ -89,9 +91,12 @@ export function ProfileView({
 
           <header className="mt-4 space-y-2">
             <div>
-              <h1 className="text-[1.65rem] font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
-                {displayName}
-              </h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-[1.65rem] font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
+                  {displayName}
+                </h1>
+                {profile.is_founding_mentor ? <FoundingMentorBadge /> : null}
+              </div>
               <p className="mt-0.5 text-sm text-muted-foreground sm:text-base">
                 @{profile.username}
               </p>
@@ -101,6 +106,15 @@ export function ProfileView({
               <p className="max-w-2xl text-[0.95rem] leading-relaxed text-foreground/85 sm:text-lg">
                 {profile.headline}
               </p>
+            ) : null}
+
+            {profile.is_founding_mentor && profile.expertise.length > 0 ? (
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Expertise
+                </p>
+                <ExpertiseList areas={profile.expertise} />
+              </div>
             ) : null}
 
             {hasProfileValue(profile.location) ? (

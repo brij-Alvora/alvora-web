@@ -1,4 +1,6 @@
 import { getProfilesByAuthIds } from "@/lib/profile/queries";
+import { mapProfile } from "@/lib/profile/map-profile";
+import { createClient } from "@/lib/supabase/server";
 import { hasProfileValue } from "@/lib/profile/presentation";
 import { getRecommendedProjects } from "@/lib/discover/recommendations";
 import {
@@ -33,6 +35,13 @@ export type DiscoverBuilder = {
   level: string;
 };
 
+export type DiscoverMentor = {
+  profile: Profile;
+  points: number;
+  level: string;
+  reviewsGiven: number;
+};
+
 export type DiscoverActivityItem = {
   id: string;
   eventType: string;
@@ -48,6 +57,7 @@ export type DiscoverFeed = {
   recommended: DiscoverProject[];
   openRequests: DiscoverValidationRequest[];
   topBuilders: DiscoverBuilder[];
+  foundingMentors: DiscoverMentor[];
   activity: DiscoverActivityItem[];
 };
 
@@ -109,6 +119,90 @@ async function getTopBuilders(limit = 10): Promise<DiscoverBuilder[]> {
     });
   }
   return builders;
+}
+
+function profileAuthIds(profile: Profile) {
+  return [
+    ...new Set(
+      [profile.user_id, profile.id].filter(
+        (value): value is string => Boolean(value),
+      ),
+    ),
+  ];
+}
+
+async function getFoundingMentors(limit = 20): Promise<DiscoverMentor[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("is_founding_mentor", true)
+    .limit(limit);
+
+  if (error || !Array.isArray(data)) return [];
+
+  const profiles = data
+    .map((row) => mapProfile(row as Record<string, unknown>))
+    .filter((row): row is Profile => row !== null);
+  if (profiles.length === 0) return [];
+
+  const ids = [...new Set(profiles.flatMap(profileAuthIds))];
+  const pointsByUser = new Map<string, number>();
+  const reviewsByUser = new Map<string, number>();
+
+  const admin = createAdminClient();
+  if (ids.length > 0) {
+    const { data: events } = await admin
+      .from("reputation_events")
+      .select("user_id, points")
+      .in("user_id", ids);
+    if (Array.isArray(events)) {
+      for (const row of events) {
+        const userId = typeof row.user_id === "string" ? row.user_id : "";
+        const points =
+          typeof row.points === "number" ? row.points : Number(row.points);
+        if (!userId || !Number.isFinite(points)) continue;
+        pointsByUser.set(userId, (pointsByUser.get(userId) ?? 0) + points);
+      }
+    }
+  }
+
+  if (ids.length > 0) {
+    const { data: reviews } = await supabase
+      .from("reviews")
+      .select("reviewer_id")
+      .in("reviewer_id", ids)
+      .eq("moderation_status", "visible");
+    if (Array.isArray(reviews)) {
+      for (const row of reviews) {
+        const reviewerId =
+          typeof row.reviewer_id === "string" ? row.reviewer_id : "";
+        if (!reviewerId) continue;
+        reviewsByUser.set(reviewerId, (reviewsByUser.get(reviewerId) ?? 0) + 1);
+      }
+    }
+  }
+
+  return profiles
+    .map((profile) => {
+      const keys = profileAuthIds(profile);
+      const points = keys.reduce(
+        (total, id) => total + (pointsByUser.get(id) ?? 0),
+        0,
+      );
+      const reviewsGiven = keys.reduce(
+        (total, id) => total + (reviewsByUser.get(id) ?? 0),
+        0,
+      );
+      return {
+        profile,
+        points,
+        level: getReputationBand(points).name,
+        reviewsGiven,
+      };
+    })
+    .sort((a, b) => b.points - a.points || builderLabel(a.profile).localeCompare(builderLabel(b.profile)))
+    .slice(0, limit);
 }
 
 async function getRecentActivity(limit = 12): Promise<DiscoverActivityItem[]> {
@@ -195,12 +289,13 @@ async function getRecentActivity(limit = 12): Promise<DiscoverActivityItem[]> {
 }
 
 export async function getDiscoverFeed(userId: string): Promise<DiscoverFeed> {
-  const [projects, recommended, reviewable, topBuilders, activity] =
+  const [projects, recommended, reviewable, topBuilders, foundingMentors, activity] =
     await Promise.all([
       getRecentPublishedProjects(8),
       getRecommendedProjects({ userId, limit: 6 }),
       getReviewableValidationRequests(),
       getTopBuilders(10),
+      getFoundingMentors(20),
       getRecentActivity(12),
     ]);
   const openRequests = reviewable.slice(0, 8);
@@ -225,6 +320,7 @@ export async function getDiscoverFeed(userId: string): Promise<DiscoverFeed> {
       builder: profiles.get(request.requested_by) ?? null,
     })),
     topBuilders,
+    foundingMentors,
     activity,
   };
 }

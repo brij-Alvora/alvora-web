@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AdminFields } from "@/components/admin/admin-fields";
 import { UserActions } from "@/components/admin/user-actions";
+import { FoundingMentorBadge } from "@/components/mentors/founding-mentor-badge";
 import { getAdminModerationActions } from "@/lib/admin/alerts";
 import {
   getAdminProjects,
@@ -74,7 +75,10 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {row.profile.role === "admin" ? "Admin" : "User"}
             </p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight">{name}</h2>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-semibold tracking-tight">{name}</h2>
+              {row.profile.is_founding_mentor ? <FoundingMentorBadge /> : null}
+            </div>
             <p className="text-sm text-muted-foreground">@{row.profile.username}</p>
           </div>
           <AdminFields
@@ -85,6 +89,14 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
                 value: formatDiscoverDate(row.profile.created_at),
               },
               { label: "Status", value: row.profile.account_status },
+              {
+                label: "Founding Mentor",
+                value: row.profile.is_founding_mentor ? "Yes" : "No",
+              },
+              {
+                label: "Expertise",
+                value: row.profile.expertise.join(", ") || null,
+              },
               { label: "Headline", value: row.profile.headline },
               { label: "Location", value: row.profile.location },
               { label: "Country", value: countryLabel(place) },
@@ -96,6 +108,8 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             profileId={row.profile.id}
             username={row.profile.username}
             status={row.profile.account_status}
+            isFoundingMentor={row.profile.is_founding_mentor}
+            expertise={row.profile.expertise}
           />
         </CardContent>
       </Card>

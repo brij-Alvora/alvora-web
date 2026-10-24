@@ -32,6 +32,8 @@ export type Profile = {
   reputation_score: number | null;
   role: UserRole;
   account_status: AccountStatus;
+  is_founding_mentor: boolean;
+  expertise: string[];
   created_at: string;
   updated_at: string;
 };
@@ -53,6 +55,8 @@ export type ProfileInsert = {
   reputation_score?: number | null;
   role?: UserRole;
   account_status?: AccountStatus;
+  is_founding_mentor?: boolean;
+  expertise?: string[];
   created_at?: string;
   updated_at?: string;
 };

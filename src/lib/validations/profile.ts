@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { parseExpertiseInput } from "@/lib/mentors/expertise";
+
 const optionalString = (max: number, label: string) =>
   z
     .string()
@@ -40,6 +42,12 @@ export const profileSchema = z.object({
   website: optionalUrl,
   github_url: optionalUrl,
   linkedin_url: optionalUrl,
+  expertise: z
+    .string()
+    .trim()
+    .max(400, "Expertise must be under 400 characters")
+    .optional()
+    .or(z.literal("")),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -50,6 +58,11 @@ export function normalizeProfileValues(values: ProfileFormValues) {
     return trimmed ? trimmed : null;
   };
 
+  const expertise = parseExpertiseInput(values.expertise);
+  if ("error" in expertise) {
+    return { error: expertise.error };
+  }
+
   return {
     username: values.username,
     full_name: values.full_name,
@@ -59,5 +72,6 @@ export function normalizeProfileValues(values: ProfileFormValues) {
     website: blankToNull(values.website),
     github_url: blankToNull(values.github_url),
     linkedin_url: blankToNull(values.linkedin_url),
+    expertise: expertise.areas,
   };
 }
