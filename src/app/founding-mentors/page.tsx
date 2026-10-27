@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { TrackAcquisitionEvent } from "@/components/analytics/track-event";
 import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
-import { Button } from "@/components/ui/button";
+import { InvitationActions } from "@/components/mentors/invitation-actions";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -50,9 +50,6 @@ const AUDIENCES = [
   },
 ] as const;
 
-const APPROVAL_COPY =
-  "Founding Mentor status is granted to selected members of the Beta Cohort after review by the Alvora team.";
-
 const STEPS = [
   {
     title: "Invitation",
@@ -76,53 +73,6 @@ const STEPS = [
   },
 ] as const;
 
-function InvitationActions({
-  isMentor,
-  isSignedIn,
-}: {
-  isMentor: boolean;
-  isSignedIn: boolean;
-}) {
-  if (isMentor) {
-    return (
-      <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Your Founding Mentor status is already approved for Beta Cohort 2026.
-        </p>
-        <Button asChild size="lg">
-          <Link href="/profile/edit">Complete your mentor profile</Link>
-        </Button>
-      </div>
-    );
-  }
-
-  const href = isSignedIn ? "/profile/edit" : "/login?next=/profile/edit";
-
-  return (
-    <div className="space-y-3">
-      <Button asChild size="lg">
-        <Link href={href}>Continue as an Invited Mentor</Link>
-      </Button>
-      <p className="max-w-md text-sm leading-6 text-muted-foreground">
-        {APPROVAL_COPY}
-      </p>
-      {isSignedIn ? (
-        <p className="max-w-md text-sm leading-6 text-muted-foreground">
-          Finish your profile next. Completing it does not add the credential.
-        </p>
-      ) : (
-        <p className="max-w-md text-sm leading-6 text-muted-foreground">
-          <Link href="/register" className="font-medium text-foreground hover:underline">
-            Create an account
-          </Link>{" "}
-          or sign in, then complete your profile. The credential follows
-          approval.
-        </p>
-      )}
-    </div>
-  );
-}
-
 export default async function FoundingMentorsPage() {
   const supabase = await createClient();
   const {
@@ -134,6 +84,10 @@ export default async function FoundingMentorsPage() {
 
   return (
     <main className="flex-1">
+      <TrackAcquisitionEvent
+        eventName="founding_mentor_page_viewed"
+        mentorIntent
+      />
       <div className="mx-auto w-full max-w-5xl space-y-20 px-4 py-16 sm:px-6 sm:py-24">
         <section className="max-w-2xl space-y-6">
           <p className="text-sm font-medium tracking-wide text-primary">

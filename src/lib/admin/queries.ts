@@ -27,7 +27,10 @@ import type {
   SupportTicket,
   ValidationRequest,
 } from "@/lib/supabase/types";
+import { buildFunnelSteps, type FunnelStep } from "@/lib/analytics/funnel";
 import { mapValidationRequest } from "@/lib/validation/map-request";
+
+export type { FunnelStep };
 
 export type AdminCounts = {
   users: number;
@@ -48,14 +51,6 @@ export type GrowthMetric = {
   previous: number;
   delta: number;
   deltaPercent: number | null;
-};
-
-export type FunnelStep = {
-  key: string;
-  label: string;
-  value: number;
-  percentOfSignup: number;
-  percentOfPrevious: number;
 };
 
 export type AdminAnalytics = AdminCounts & {
@@ -201,18 +196,6 @@ async function countAuthUsers() {
   }
 }
 
-function funnelSteps(values: Array<{ key: string; label: string; value: number }>): FunnelStep[] {
-  const signup = values[0]?.value ?? 0;
-  return values.map((step, index) => {
-    const previous = index === 0 ? step.value : values[index - 1]?.value ?? 0;
-    return {
-      ...step,
-      percentOfSignup: signup === 0 ? 0 : Math.round((step.value / signup) * 100),
-      percentOfPrevious:
-        previous === 0 ? 0 : Math.round((step.value / previous) * 100),
-    };
-  });
-}
 
 export async function getAdminAnalytics(): Promise<AdminAnalytics> {
   const admin = createAdminClient();
@@ -413,7 +396,7 @@ export async function getAdminAnalytics(): Promise<AdminAnalytics> {
     monthlyGrowth: growthSeries.map((series) =>
       growthMetric(series.label, series.dates, monthStart, now, prevMonthStart),
     ),
-    funnel: funnelSteps([
+    funnel: buildFunnelSteps([
       { key: "signup", label: "Signup", value: signupCount },
       { key: "profile", label: "Profile", value: (profileRows.data ?? []).length },
       { key: "project", label: "Project", value: projectOwners.size },

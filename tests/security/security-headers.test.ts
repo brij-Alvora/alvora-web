@@ -11,5 +11,7 @@ describe("security headers", () => {
     expect(config).toContain("Permissions-Policy");
     expect(config).toContain("frame-ancestors 'none'");
     expect(config).toContain("DENY");
+    expect(config).toContain("https://www.clarity.ms");
+    expect(config).toContain("https://www.googletagmanager.com");
   });
 });

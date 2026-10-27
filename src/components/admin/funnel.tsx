@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { FunnelStep } from "@/lib/admin/queries";
+import type { FunnelStep } from "@/lib/analytics/funnel";
 import { Card, CardContent } from "@/components/ui/card";
 
 const FUNNEL_HREFS: Record<string, string> = {
@@ -9,24 +9,35 @@ const FUNNEL_HREFS: Record<string, string> = {
   project: "/admin/projects",
   validation: "/admin/validations",
   review: "/admin/reviews",
+  founding_mentor_page_viewed: "/founding-mentors",
+  invited_mentor_continue_clicked: "/founding-mentors",
+  signup_started: "/register",
+  signup_completed: "/admin/users",
+  profile_completed: "/admin/users",
+  mentor_approved: "/admin/users?mentor=founding",
 };
 
 type FunnelProps = {
   steps: FunnelStep[];
+  title?: string;
+  description?: string;
+  baselineLabel?: string;
 };
 
-export function Funnel({ steps }: FunnelProps) {
+export function Funnel({
+  steps,
+  title = "Platform funnel",
+  description = "Unique people at each stage: signup → profile → project → validation → review.",
+  baselineLabel = "of signup",
+}: FunnelProps) {
   const max = steps[0]?.value ?? 0;
 
   return (
     <Card className="shadow-sm">
       <CardContent className="space-y-4 p-5">
         <div>
-          <h3 className="font-medium">Platform funnel</h3>
-          <p className="text-sm text-muted-foreground">
-            Unique people at each stage: signup → profile → project →
-            validation → review.
-          </p>
+          <h3 className="font-medium">{title}</h3>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
         <ol className="space-y-3">
           {steps.map((step) => {
@@ -37,7 +48,7 @@ export function Funnel({ steps }: FunnelProps) {
                 <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="font-medium">{step.label}</span>
                   <span className="tabular-nums text-muted-foreground">
-                    {step.value} · {step.percentOfSignup}% of signup
+                    {step.value} · {step.percentOfSignup}% {baselineLabel}
                     {step.key !== "signup" ? ` · ${step.percentOfPrevious}% of prior` : ""}
                   </span>
                 </div>

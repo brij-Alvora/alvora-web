@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Source_Serif_4 } from "next/font/google";
 
+import { AnalyticsProviders } from "@/components/analytics/analytics-providers";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { AccountStatusBanner } from "@/components/trust/account-status-banner";
@@ -47,6 +48,7 @@ export default async function RootLayout({
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         <SiteFooter />
         <Toaster />
+        <AnalyticsProviders />
       </body>
     </html>
   );

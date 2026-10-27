@@ -9,6 +9,7 @@ import {
   registerAction,
   resendConfirmationAction,
 } from "@/lib/actions/auth";
+import { trackBrowserEvent } from "@/lib/analytics/client";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 import { TurnstileField } from "@/components/auth/turnstile-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function RegisterForm() {
+export function RegisterForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -36,9 +37,12 @@ export function RegisterForm() {
     setError(null);
     setSuccess(null);
     startTransition(async () => {
-      const result = await registerAction(values);
+      const result = await registerAction(values, nextPath);
       if (result?.error) setError(result.error);
-      if (result?.success) setSuccess(result.success);
+      if (result?.success) {
+        trackBrowserEvent("signup_completed", { page_path: "/register" });
+        setSuccess(result.success);
+      }
     });
   };
 

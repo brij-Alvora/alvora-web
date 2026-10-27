@@ -10,6 +10,11 @@ import {
 import { clientIpFromHeaders } from "@/lib/auth/client-ip";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { toUserSafeError } from "@/lib/errors/user-safe";
+import {
+  attachAcquisitionUser,
+  persistAcquisitionEvent,
+  readAcquisitionContext,
+} from "@/lib/analytics/persist";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
 import { absoluteUrl } from "@/lib/utils";
@@ -54,11 +59,18 @@ export async function loginAction(
     return { error: "This account is banned." };
   }
 
+  const { data: sessionData } = await supabase.auth.getUser();
+  if (sessionData.user) {
+    const { sessionId } = await readAcquisitionContext();
+    await attachAcquisitionUser(sessionId, sessionData.user.id);
+  }
+
   redirect(safeNextPath(next));
 }
 
 export async function registerAction(
   input: RegisterInput,
+  next?: string,
 ): Promise<ActionResult> {
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) {
@@ -100,6 +112,14 @@ export async function registerAction(
     return { error: toUserSafeError(error, "Could not create your account.") };
   }
 
+  if (data.user) {
+    await persistAcquisitionEvent({
+      eventName: "signup_completed",
+      path: "/register",
+      userId: data.user.id,
+    });
+  }
+
   if (data.user && !data.session) {
     return {
       success:
@@ -107,7 +127,7 @@ export async function registerAction(
     };
   }
 
-  redirect("/dashboard");
+  redirect(safeNextPath(next || "/dashboard"));
 }
 
 export async function logoutAction(): Promise<void> {

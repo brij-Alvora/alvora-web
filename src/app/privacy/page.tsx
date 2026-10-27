@@ -6,7 +6,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalDocument title="Privacy Policy" updated="14/10/2026 00:00:00">
+    <LegalDocument title="Privacy Policy" updated="27/10/2026 00:00:00">
       <p>
         Alvora (“we”) provides a builder identity and validation platform. This
         policy explains what we collect, why we collect it, and how you can
@@ -18,6 +18,15 @@ export default function PrivacyPage() {
         <li>Profile and content: bio, links, projects, validation requests, reviews, and support tickets you submit.</li>
         <li>Trust and operations data: reports, moderation actions, and account status.</li>
         <li>Technical data: session cookies required to keep you signed in.</li>
+        <li>
+          Acquisition data: first-touch campaign parameters (UTM) and onboarding
+          funnel events for invited mentors, stored in a first-party cookie and
+          in our database.
+        </li>
+        <li>
+          Product analytics: Microsoft Clarity session recordings/heatmaps and
+          Google Analytics 4 page and event data when those tools are enabled.
+        </li>
       </ul>
       <h2>How we use it</h2>
       <p>
@@ -30,7 +39,9 @@ export default function PrivacyPage() {
         Public profiles, published projects, and open validation requests are
         visible to other signed-in builders. We do not sell personal data.
         Infrastructure providers (including our authentication and database
-        host) process data on our behalf to run the service.
+        host, and analytics providers Microsoft Clarity and Google Analytics
+        when configured) process data on our behalf to run and improve the
+        service.
       </p>
       <h2>Retention</h2>
       <p>

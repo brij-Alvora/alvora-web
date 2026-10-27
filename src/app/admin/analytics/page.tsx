@@ -4,6 +4,7 @@ import { AdminStatGrid } from "@/components/admin/admin-stat-grid";
 import { Funnel } from "@/components/admin/funnel";
 import { GrowthTable } from "@/components/admin/growth-table";
 import { RankingList } from "@/components/admin/ranking-list";
+import { getMentorAcquisitionReport } from "@/lib/admin/acquisition";
 import { getAdminAnalytics } from "@/lib/admin/queries";
 import { hasProfileValue } from "@/lib/profile/presentation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,10 @@ export const metadata = {
 };
 
 export default async function AdminAnalyticsPage() {
-  const analytics = await getAdminAnalytics();
+  const [analytics, mentorAcquisition] = await Promise.all([
+    getAdminAnalytics(),
+    getMentorAcquisitionReport(),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -55,6 +59,25 @@ export default async function AdminAnalyticsPage() {
           />
         </div>
       </section>
+
+      <Funnel
+        title="Mentor acquisition"
+        description={`${mentorAcquisition.invitedSessions} invitation sessions. Drop-off is unique sessions that viewed /founding-mentors, then each later step.`}
+        baselineLabel="of page views"
+        steps={mentorAcquisition.funnel}
+      />
+      <div className="grid gap-3 lg:grid-cols-2">
+        <RankingList
+          title="Invitation sources"
+          items={mentorAcquisition.sources}
+          emptyLabel="No UTM source captured yet."
+        />
+        <RankingList
+          title="Invitation campaigns"
+          items={mentorAcquisition.campaigns}
+          emptyLabel="No UTM campaign captured yet."
+        />
+      </div>
 
       <Funnel steps={analytics.funnel} />
 

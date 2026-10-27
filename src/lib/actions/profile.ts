@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { toUserSafeError } from "@/lib/errors/user-safe";
 import { mapProfile } from "@/lib/profile/map-profile";
+import { isMentorProfileComplete } from "@/lib/analytics/events";
+import { persistAcquisitionEvent } from "@/lib/analytics/persist";
 import { awardProfileCompletedIfEligible } from "@/lib/reputation/award";
 import {
   getCurrentProfile as queryCurrentProfile,
@@ -125,6 +127,13 @@ export async function upsertProfileAction(
   }
 
   await awardProfileCompletedIfEligible(user.id, profile);
+  if (isMentorProfileComplete(profile)) {
+    await persistAcquisitionEvent({
+      eventName: "profile_completed",
+      path: "/profile/edit",
+      userId: user.id,
+    });
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/profile/edit");

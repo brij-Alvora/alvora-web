@@ -67,6 +67,50 @@ export type ProfileInsert = {
 
 export type ProfileUpdate = Partial<Omit<ProfileInsert, "id">>;
 
+export type AcquisitionEventNameDb =
+  | "founding_mentor_page_viewed"
+  | "invited_mentor_continue_clicked"
+  | "signup_started"
+  | "signup_completed"
+  | "profile_completed"
+  | "mentor_approved";
+
+export type AcquisitionEvent = {
+  id: string;
+  session_id: string;
+  user_id: string | null;
+  event_name: AcquisitionEventNameDb;
+  path: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
+  referrer: string | null;
+  metadata: Json;
+  created_at: string;
+};
+
+export type AcquisitionEventInsert = {
+  id?: string;
+  session_id: string;
+  user_id?: string | null;
+  event_name: AcquisitionEventNameDb;
+  path?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_term?: string | null;
+  utm_content?: string | null;
+  referrer?: string | null;
+  metadata?: Json;
+  created_at?: string;
+};
+
+export type AcquisitionEventUpdate = Partial<
+  Omit<AcquisitionEventInsert, "id">
+>;
+
 export type ProjectStatus = "draft" | "published" | "archived";
 
 export type Project = {
@@ -528,8 +572,23 @@ export type Database = {
         };
         Relationships: [];
       };
+      acquisition_events: {
+        Row: AcquisitionEvent;
+        Insert: AcquisitionEventInsert;
+        Update: AcquisitionEventUpdate;
+        Relationships: [];
+      };
     };
-    Views: Record<string, never>;
+    Views: {
+      mentor_acquisition_funnel: {
+        Row: {
+          event_name: string;
+          sort_order: number;
+          sessions: number;
+        };
+        Relationships: [];
+      };
+    };
     Functions: Record<string, never>;
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

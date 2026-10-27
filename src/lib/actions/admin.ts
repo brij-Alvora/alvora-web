@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { toUserSafeError } from "@/lib/errors/user-safe";
+import { persistAcquisitionEvent } from "@/lib/analytics/persist";
 import { requireAdmin } from "@/lib/admin/access";
 import {
   isActionableReportStatus,
@@ -193,6 +194,14 @@ export async function setFoundingMentorAction(
   }
 
   const flagChanged = mapped.profile.is_founding_mentor !== isFoundingMentor;
+  if (flagChanged && isFoundingMentor) {
+    await persistAcquisitionEvent({
+      eventName: "mentor_approved",
+      path: `/admin/users/${mapped.profile.id}`,
+      userId: mapped.authId,
+      metadata: { profile_id: mapped.profile.id },
+    });
+  }
   await logModerationAction({
     adminId: user.id,
     entityType: "user",
