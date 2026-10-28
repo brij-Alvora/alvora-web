@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Outfit, Source_Serif_4 } from "next/font/google";
+import Script from "next/script";
 
 import { AnalyticsProviders } from "@/components/analytics/analytics-providers";
+import { clarityProjectId } from "@/lib/analytics/client";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { AccountStatusBanner } from "@/components/trust/account-status-banner";
@@ -36,8 +38,18 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const profile = await getCurrentProfile();
+  const clarityId = clarityProjectId();
   return (
     <html lang="en">
+      {clarityId ? (
+        <Script id="clarity-init" strategy="beforeInteractive">
+          {`(function(c,l,a,r,i,t,y){
+c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+})(window,document,"clarity","script","${clarityId}");`}
+        </Script>
+      ) : null}
       <body
         className={`${outfit.variable} ${sourceSerif.variable} flex min-h-dvh flex-col overflow-x-hidden bg-background font-sans text-foreground antialiased`}
       >
