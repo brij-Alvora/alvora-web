@@ -1,11 +1,18 @@
 "use client";
 
+import { useEffect } from "react";
+
 export default function ErrorPage({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error("[alvora] page error", error.message, error.digest);
+  }, [error]);
+
   return (
     <div className="mx-auto w-full max-w-lg space-y-3 px-4 py-16 sm:px-6">
       <h1 className="text-2xl font-semibold tracking-tight">

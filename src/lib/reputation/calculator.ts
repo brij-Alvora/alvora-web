@@ -6,7 +6,7 @@ import {
   getReputationBand,
   progressToNextLevel,
 } from "@/lib/reputation/rules";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { getAdminClientOrNull } from "@/lib/supabase/admin";
 import type { ReputationEvent } from "@/lib/supabase/types";
 
 export type ReputationSnapshot = {
@@ -17,31 +17,49 @@ export type ReputationSnapshot = {
   events: ReputationEvent[];
 };
 
+export function emptyReputationSnapshot(): ReputationSnapshot {
+  const band = getReputationBand(0);
+  return {
+    total_points: 0,
+    level: band.name,
+    next_level: band.nextName,
+    progress: progressToNextLevel(0, band.nextAt),
+    events: [],
+  };
+}
+
 export async function calculateReputation(
   userId: string,
 ): Promise<ReputationSnapshot> {
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("reputation_events")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+  try {
+    const admin = getAdminClientOrNull();
+    if (!admin || !userId) return emptyReputationSnapshot();
 
-  const events =
-    error || !Array.isArray(data)
-      ? []
-      : data
-          .map((row) => mapReputationEvent(row as Record<string, unknown>))
-          .filter((row): row is ReputationEvent => row !== null);
+    const { data, error } = await admin
+      .from("reputation_events")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
-  const total_points = sumReputationPoints(events);
-  const band = getReputationBand(total_points);
+    const events =
+      error || !Array.isArray(data)
+        ? []
+        : data
+            .map((row) => mapReputationEvent(row as Record<string, unknown>))
+            .filter((row): row is ReputationEvent => row !== null);
 
-  return {
-    total_points,
-    level: band.name,
-    next_level: band.nextName,
-    progress: progressToNextLevel(total_points, band.nextAt),
-    events,
-  };
+    const total_points = sumReputationPoints(events);
+    const band = getReputationBand(total_points);
+
+    return {
+      total_points,
+      level: band.name,
+      next_level: band.nextName,
+      progress: progressToNextLevel(total_points, band.nextAt),
+      events,
+    };
+  } catch (error) {
+    console.error("[reputation] calculateReputation failed", error);
+    return emptyReputationSnapshot();
+  }
 }

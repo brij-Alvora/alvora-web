@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { WhatIsAlvora } from "@/components/home/what-is-alvora";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 
@@ -49,7 +50,7 @@ export default async function HomePage() {
       />
 
       <div className="flex flex-1 flex-col">
-        <section className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-8 px-4 py-12 sm:px-6">
+        <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-12 sm:px-6">
           <div className="max-w-xl space-y-4">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               Prove the AI work you ship
@@ -87,6 +88,8 @@ export default async function HomePage() {
             )}
           </div>
         </section>
+
+        <WhatIsAlvora signedIn={Boolean(user)} />
 
         <section className="border-t border-border/60">
           <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-8 sm:grid-cols-3 sm:px-6">

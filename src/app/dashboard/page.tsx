@@ -23,11 +23,20 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const profile = await getCurrentProfile();
+  const profile = await getCurrentProfile().catch((error) => {
+    console.error("[dashboard] getCurrentProfile failed", error);
+    return null;
+  });
   const [stats, projects, validationRequests] = await Promise.all([
     getBuilderStats(user.id),
-    getMyProjects(),
-    getMyValidationRequests(),
+    getMyProjects().catch((error) => {
+      console.error("[dashboard] getMyProjects failed", error);
+      return [];
+    }),
+    getMyValidationRequests().catch((error) => {
+      console.error("[dashboard] getMyValidationRequests failed", error);
+      return [];
+    }),
   ]);
 
   return (

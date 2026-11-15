@@ -112,46 +112,70 @@ export async function getWorkspaceDashboard(): Promise<WorkspaceDashboard> {
     },
   };
 
+  try {
+    return await loadWorkspaceDashboard(empty);
+  } catch (error) {
+    console.error("[workspace] dashboard failed", error);
+    return empty;
+  }
+}
+
+async function loadWorkspaceDashboard(
+  empty: WorkspaceDashboard,
+): Promise<WorkspaceDashboard> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return empty;
 
-  const projects = await getMyProjects();
+  let projects: Awaited<ReturnType<typeof getMyProjects>> = [];
+  try {
+    projects = await getMyProjects();
+  } catch (error) {
+    console.error("[workspace] getMyProjects failed", error);
+    return empty;
+  }
   const ids = projects.map((project) => project.id);
 
-  const [
-    { data: requestRows },
-    { data: reviewRows },
-    { data: givenRows, count: givenCount },
-    reputation,
-  ] = await Promise.all([
-    ids.length
-      ? supabase
-          .from("validation_requests")
-          .select("*")
-          .in("project_id", ids)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [] }),
-    ids.length
-      ? supabase
-          .from("reviews")
-          .select("*")
-          .in("project_id", ids)
-          .neq("moderation_status", "hidden")
-          .neq("moderation_status", "flagged")
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [] }),
-    supabase
-      .from("reviews")
-      .select("*", { count: "exact" })
-      .eq("reviewer_id", user.id)
-      .neq("moderation_status", "hidden")
-      .order("created_at", { ascending: false })
-      .limit(40),
-    calculateReputation(user.id),
-  ]);
+  let requestRows: unknown = [];
+  let reviewRows: unknown = [];
+  let givenRows: unknown = [];
+  let givenCount: number | null = null;
+  const reputation = await calculateReputation(user.id);
+  try {
+    const [requestsResult, reviewsResult, givenResult] = await Promise.all([
+      ids.length
+        ? supabase
+            .from("validation_requests")
+            .select("*")
+            .in("project_id", ids)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+      ids.length
+        ? supabase
+            .from("reviews")
+            .select("*")
+            .in("project_id", ids)
+            .neq("moderation_status", "hidden")
+            .neq("moderation_status", "flagged")
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+      supabase
+        .from("reviews")
+        .select("*", { count: "exact" })
+        .eq("reviewer_id", user.id)
+        .neq("moderation_status", "hidden")
+        .order("created_at", { ascending: false })
+        .limit(40),
+    ]);
+    requestRows = requestsResult.data;
+    reviewRows = reviewsResult.data;
+    givenRows = givenResult.data;
+    givenCount = givenResult.count ?? null;
+  } catch (error) {
+    console.error("[workspace] insight queries failed", error);
+  }
 
   const requests = mapRequests(requestRows);
   const reviews = mapReviews(reviewRows);

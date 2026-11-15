@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 
 import { TrackAcquisitionEvent } from "@/components/analytics/track-event";
+import { FlowSteps } from "@/components/media/flow-steps";
 import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
 import { InvitationActions } from "@/components/mentors/invitation-actions";
+import { MentorExplainerJourney } from "@/components/mentors/mentor-explainer-journey";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -50,25 +52,28 @@ const AUDIENCES = [
   },
 ] as const;
 
+const RECOGNITION_FLOW = [
+  "Invitation",
+  "Profile Setup",
+  "Alvora Team Review",
+  "Founding Mentor Recognition",
+] as const;
+
 const STEPS = [
   {
     title: "Invitation",
     body: "A personal invitation starts the conversation. It does not add the credential.",
   },
   {
-    title: "Create account or sign in",
-    body: "Use the account that will carry your public profile.",
+    title: "Profile Setup",
+    body: "Create an account or sign in, then add your expertise, mentor statement, and why you mentor. Use the account that will carry your public profile.",
   },
   {
-    title: "Profile setup",
-    body: "Add your expertise, mentor statement, and why you mentor.",
-  },
-  {
-    title: "Mentor approval",
+    title: "Alvora Team Review",
     body: "The Alvora team reviews selected members of the Beta Cohort.",
   },
   {
-    title: "Founding Mentor recognition",
+    title: "Founding Mentor Recognition",
     body: "The credential appears on your profile only after that approval.",
   },
 ] as const;
@@ -106,11 +111,14 @@ export default async function FoundingMentorsPage() {
           <InvitationActions isMentor={isMentor} isSignedIn={isSignedIn} />
         </section>
 
-        <section className="max-w-2xl space-y-6">
+        <MentorExplainerJourney />
+
+        <section className="space-y-6">
           <h2 className="font-display text-3xl tracking-tight">
-            How recognition is granted
+            How Recognition Is Granted
           </h2>
-          <ol className="space-y-4">
+          <FlowSteps steps={RECOGNITION_FLOW} />
+          <ol className="max-w-2xl space-y-4">
             {STEPS.map((step, index) => (
               <li key={step.title} className="flex gap-4">
                 <span className="mt-0.5 text-sm font-medium tabular-nums text-primary">

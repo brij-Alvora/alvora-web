@@ -1,5 +1,8 @@
 import { countOwnerProjects } from "@/lib/project/queries";
-import { calculateReputation } from "@/lib/reputation/calculator";
+import {
+  calculateReputation,
+  emptyReputationSnapshot,
+} from "@/lib/reputation/calculator";
 import type { ReputationSnapshot } from "@/lib/reputation/calculator";
 import {
   countReviewsReceived,
@@ -15,20 +18,33 @@ export type BuilderStats = {
   reputation: ReputationSnapshot;
 };
 
+const emptyStats = (): BuilderStats => ({
+  projects: 0,
+  validationRequests: 0,
+  reviewsReceived: 0,
+  reviewsSubmitted: 0,
+  reputation: emptyReputationSnapshot(),
+});
+
 export async function getBuilderStats(userId: string): Promise<BuilderStats> {
-  const [projects, validationRequests, reviewsReceived, reviewsSubmitted, reputation] =
-    await Promise.all([
-      countOwnerProjects(userId),
-      countMyValidationRequests(userId),
-      countReviewsReceived(userId),
-      countReviewsSubmitted(userId),
-      calculateReputation(userId),
-    ]);
-  return {
-    projects,
-    validationRequests,
-    reviewsReceived,
-    reviewsSubmitted,
-    reputation,
-  };
+  try {
+    const [projects, validationRequests, reviewsReceived, reviewsSubmitted, reputation] =
+      await Promise.all([
+        countOwnerProjects(userId).catch(() => 0),
+        countMyValidationRequests(userId).catch(() => 0),
+        countReviewsReceived(userId).catch(() => 0),
+        countReviewsSubmitted(userId).catch(() => 0),
+        calculateReputation(userId),
+      ]);
+    return {
+      projects,
+      validationRequests,
+      reviewsReceived,
+      reviewsSubmitted,
+      reputation,
+    };
+  } catch (error) {
+    console.error("[dashboard] getBuilderStats failed", error);
+    return emptyStats();
+  }
 }
