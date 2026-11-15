@@ -3,12 +3,8 @@ import Link from "next/link";
 import { ExplainerVideo } from "@/components/media/explainer-video";
 import { Button } from "@/components/ui/button";
 
-type WhatIsAlvoraProps = {
-  signedIn: boolean;
-};
-
-export function WhatIsAlvora({ signedIn }: WhatIsAlvoraProps) {
-  const projectsHref = signedIn ? "/discover" : "/login?next=/discover";
+export function WhatIsAlvora() {
+  const projectsHref = "/discover";
 
   return (
     <section

@@ -68,6 +68,9 @@ export async function SiteHeader() {
           ) : (
             <>
               <Button asChild variant="ghost" size="sm">
+                <Link href="/discover">Discover</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
                 <Link href="/login">Sign in</Link>
               </Button>
               <Button asChild size="sm">

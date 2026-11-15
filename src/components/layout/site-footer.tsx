@@ -11,6 +11,9 @@ export function SiteFooter() {
           <p>Builder identity and validation</p>
         </div>
         <nav className="flex flex-wrap gap-4">
+          <Link href="/discover" className="hover:text-foreground">
+            Discover
+          </Link>
           <Link href="/founding-mentors" className="hover:text-foreground">
             Founding Mentors
           </Link>

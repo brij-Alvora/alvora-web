@@ -10,7 +10,6 @@ const PROTECTED_PREFIXES = [
   "/projects",
   "/validations",
   "/reputation",
-  "/discover",
   "/admin",
 ];
 

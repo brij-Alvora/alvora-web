@@ -89,7 +89,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <WhatIsAlvora signedIn={Boolean(user)} />
+        <WhatIsAlvora />
 
         <section className="border-t border-border/60">
           <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-8 sm:grid-cols-3 sm:px-6">
