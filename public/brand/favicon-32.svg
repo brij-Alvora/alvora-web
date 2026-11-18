@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Alvora favicon 32 — Optical 16, teal on paper</title>
+  <rect width="32" height="32" fill="#f7f8f6"/>
+  <g transform="translate(16 2) scale(2)" fill="#0f766e">
+    <path d="M-1 0 L1 0 L5.722 12.974 L2.903 14 L0 6.024 L-2.903 14 L-5.722 12.974 Z"/>
+    <rect x="-1.738" y="9.012" width="3.475" height="2"/>
+  </g>
+</svg>

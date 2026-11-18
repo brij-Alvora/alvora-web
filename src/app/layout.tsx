@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 
@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { AccountStatusBanner } from "@/components/trust/account-status-banner";
 import { Toaster } from "@/components/ui/toaster";
 import { getCurrentProfile } from "@/lib/profile/queries";
+import { siteOrigin } from "@/lib/utils";
 
 import "./globals.css";
 
@@ -23,13 +24,45 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteOrigin()),
   title: "Alvora",
   description: "AI Builder Identity & Validation Platform",
   applicationName: "Alvora",
   icons: {
-    icon: [{ url: "/alvora-mark.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/alvora-mark.svg", type: "image/svg+xml" }],
+    icon: [
+      { url: "/brand/favicon-16.svg", type: "image/svg+xml", sizes: "16x16" },
+      { url: "/brand/favicon-32.svg", type: "image/svg+xml", sizes: "32x32" },
+      { url: "/brand/favicon-32-tile.svg", type: "image/svg+xml", sizes: "32x32" },
+    ],
+    shortcut: "/brand/favicon-32-tile.svg",
+    apple: [
+      { url: "/brand/apple-touch.svg", type: "image/svg+xml", sizes: "180x180" },
+    ],
   },
+  openGraph: {
+    title: "Alvora",
+    description: "AI Builder Identity & Validation Platform",
+    siteName: "Alvora",
+    type: "website",
+    images: [
+      {
+        url: "/brand/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Alvora",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Alvora",
+    description: "AI Builder Identity & Validation Platform",
+    images: ["/brand/og.png"],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0f766e",
 };
 
 export default async function RootLayout({

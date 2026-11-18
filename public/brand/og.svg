@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0f766e"/>
+  <g transform="translate(430 189) scale(3)">
+    <path fill="#f7f8f6" d="M-3 0 L3 0 L31.333 77.844 L14.418 84 L0 44.386 L-14.418 84 L-31.333 77.844 Z"/>
+    <rect fill="#f7f8f6" x="-3.825" y="58.193" width="7.651" height="12"/>
+  </g>
+  <text x="556" y="348" fill="#f7f8f6" font-family="Outfit" font-size="92" font-weight="500" letter-spacing="-1.84">Alvora</text>
+</svg>

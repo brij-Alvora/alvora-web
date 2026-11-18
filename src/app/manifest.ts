@@ -11,8 +11,26 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#0f766e",
     icons: [
       {
-        src: "/alvora-mark.svg",
-        sizes: "any",
+        src: "/brand/favicon-16.svg",
+        sizes: "16x16",
+        type: "image/svg+xml",
+        purpose: "any",
+      },
+      {
+        src: "/brand/favicon-32.svg",
+        sizes: "32x32",
+        type: "image/svg+xml",
+        purpose: "any",
+      },
+      {
+        src: "/brand/favicon-32-tile.svg",
+        sizes: "32x32",
+        type: "image/svg+xml",
+        purpose: "any",
+      },
+      {
+        src: "/brand/apple-touch.svg",
+        sizes: "180x180",
         type: "image/svg+xml",
         purpose: "any",
       },
