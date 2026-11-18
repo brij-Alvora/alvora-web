@@ -11,7 +11,9 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
     <div className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">
-          <BrandLockup href="/" size="lg" />
+          <div className="flex justify-center">
+            <BrandLockup href="/" size="lg" />
+          </div>
           <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>

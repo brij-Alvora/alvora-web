@@ -5,21 +5,19 @@ type AlvoraMarkProps = {
   title?: string;
 };
 
+/** 01 Canonical Open — Apex Bar. Display master. */
 export function AlvoraMark({ className, title }: AlvoraMarkProps) {
   return (
     <svg
-      viewBox="0 0 32 32"
-      fill="none"
+      viewBox="-31.333 0 62.666 84"
+      fill="#0f766e"
       className={className}
       aria-hidden={title ? undefined : true}
       role={title ? "img" : undefined}
     >
       {title ? <title>{title}</title> : null}
-      <rect width="32" height="32" rx="8" fill="var(--primary)" />
-      <path
-        fill="var(--primary-foreground)"
-        d="M16 6.5L24.2 25h-3.4l-1.55-3.6h-6.5L11.2 25H7.8L16 6.5zm-2.55 11.4h5.1L16 11.2l-2.55 6.7z"
-      />
+      <path d="M-3 0 L3 0 L31.333 77.844 L14.418 84 L0 44.386 L-14.418 84 L-31.333 77.844 Z" />
+      <rect x="-3.825" y="58.193" width="7.651" height="12" />
     </svg>
   );
 }
@@ -30,9 +28,9 @@ type BrandLockupProps = {
 };
 
 const SIZES = {
-  sm: { mark: "h-6 w-6", type: "text-sm" },
-  md: { mark: "h-7 w-7", type: "text-lg" },
-  lg: { mark: "h-9 w-9", type: "text-2xl" },
+  sm: { mark: "h-6 w-auto", type: "text-sm leading-none" },
+  md: { mark: "h-6 w-auto", type: "text-lg leading-none" },
+  lg: { mark: "h-8 w-auto", type: "text-xl leading-none" },
 };
 
 export function BrandLockup({ href = "/", size = "md" }: BrandLockupProps) {
@@ -40,13 +38,15 @@ export function BrandLockup({ href = "/", size = "md" }: BrandLockupProps) {
   const content = (
     <>
       <AlvoraMark className={`${scale.mark} shrink-0`} />
-      <span className={`font-display tracking-tight ${scale.type}`}>Alvora</span>
+      <span className={`font-sans font-medium tracking-tight ${scale.type}`}>
+        Alvora
+      </span>
     </>
   );
 
   if (!href) {
     return (
-      <span className="inline-flex items-center gap-2 text-foreground">
+      <span className="inline-flex items-center gap-2.5 text-foreground">
         {content}
       </span>
     );
@@ -55,7 +55,8 @@ export function BrandLockup({ href = "/", size = "md" }: BrandLockupProps) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 text-foreground no-underline hover:opacity-90"
+      className="inline-flex items-center gap-2.5 text-foreground no-underline hover:opacity-90"
+      aria-label="Alvora"
     >
       {content}
     </Link>
