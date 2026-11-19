@@ -3,10 +3,22 @@ import { mapProfile } from "@/lib/profile/map-profile";
 import { createClient } from "@/lib/supabase/server";
 import { hasProfileValue } from "@/lib/profile/presentation";
 import {
+  builderLabel,
+  clipDiscoverText,
   reviewSummaryText,
   type ProjectReviewStatus,
 } from "@/lib/discover/presentation";
+import {
+  catalogMeetsTrendingQuality,
+  dedupeMentors,
+  dedupeProjects,
+  isPlaceholderPerson,
+  isPlaceholderProject,
+  meetsFoundingShowcaseBar,
+  TRENDING_MIN_QUALITY,
+} from "@/lib/discover/catalog-quality";
 import { getRecommendedProjects } from "@/lib/discover/recommendations";
+import { mapProject } from "@/lib/project/map-project";
 import {
   getProjectsByIds,
   getRecentPublishedProjects,
@@ -56,6 +68,7 @@ export type DiscoverMentor = {
   points: number;
   level: string;
   reviewsGiven: number;
+  averageRating: number | null;
   contributions: MentorContributionMetrics;
   reviewedProjects: ReviewedProjectPreview[];
 };
@@ -67,11 +80,37 @@ export type DiscoverProjectProof = DiscoverProject & {
   reviewerName: string | null;
   reviewerUsername: string | null;
   reviewSummary: string | null;
+  reviewCount: number;
+  averageRating: number | null;
+  mentorCount: number;
+  featured: boolean;
+};
+
+export type DiscoverRecentReview = {
+  id: string;
+  excerpt: string;
+  createdAt: string;
+  reviewerName: string;
+  reviewerUsername: string | null;
+  reviewerHeadline: string | null;
+  projectTitle: string;
+  projectSlug: string;
+};
+
+export type DiscoverMarketplaceStats = {
+  projects: number;
+  mentors: number;
+  reviews: number;
+  foundingMentors: number;
 };
 
 export type PublicDiscoverCatalog = {
   mentors: DiscoverMentor[];
   projects: DiscoverProjectProof[];
+  featured: DiscoverProjectProof[];
+  recentReviews: DiscoverRecentReview[];
+  foundingShowcase: DiscoverMentor[];
+  stats: DiscoverMarketplaceStats;
 };
 
 export type DiscoverActivityItem = {
@@ -99,12 +138,6 @@ const ACTIVITY_TYPES = [
   "review_submitted",
   "validation_completed",
 ] as const;
-
-function builderLabel(profile: Profile | null) {
-  if (!profile) return "Builder";
-  if (hasProfileValue(profile.full_name)) return profile.full_name;
-  return `@${profile.username}`;
-}
 
 function metadataString(
   metadata: ReputationEvent["metadata"],
@@ -275,6 +308,7 @@ async function getFoundingMentors(limit = 20): Promise<DiscoverMentor[]> {
         points,
         level: getReputationBand(points).name,
         reviewsGiven: mentorContributions.reviewsContributed,
+        averageRating: null,
         contributions: mentorContributions,
         reviewedProjects: reviewedByMentor.get(profile.id) ?? [],
         authority,
@@ -393,13 +427,30 @@ async function getPublicProfilesByAuthIds(userIds: string[]) {
   return byAuthId;
 }
 
+function average(values: number[]) {
+  if (values.length === 0) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
 async function getPublishedProjectProofs(
-  limit = 24,
+  limit = 48,
 ): Promise<DiscoverProjectProof[]> {
-  const projects = await getRecentPublishedProjects(limit);
+  const admin = createAdminClient();
+  const { data: projectRows, error } = await admin
+    .from("projects")
+    .select("*")
+    .eq("status", "published")
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .limit(limit);
+
+  const projects = error
+    ? []
+    : (Array.isArray(projectRows) ? projectRows : [])
+        .map((row) => mapProject(row as Record<string, unknown>))
+        .filter((row): row is Project => row !== null);
+
   if (projects.length === 0) return [];
 
-  const admin = createAdminClient();
   const ids = projects.map((project) => project.id);
   const [reviewResult, requestResult] = await Promise.all([
     admin
@@ -419,7 +470,11 @@ async function getPublishedProjectProofs(
     .filter((row): row is Review => row !== null);
 
   const latestReviewByProject = new Map<string, Review>();
+  const reviewsByProject = new Map<string, Review[]>();
   for (const review of reviews) {
+    const list = reviewsByProject.get(review.project_id) ?? [];
+    list.push(review);
+    reviewsByProject.set(review.project_id, list);
     if (!latestReviewByProject.has(review.project_id)) {
       latestReviewByProject.set(review.project_id, review);
     }
@@ -438,17 +493,21 @@ async function getPublishedProjectProofs(
   }
 
   const reviewerIds = [
-    ...new Set(
-      [...latestReviewByProject.values()].map((review) => review.reviewer_id),
-    ),
+    ...new Set(reviews.map((review) => review.reviewer_id)),
   ];
   const profiles = await getPublicProfilesByAuthIds([
     ...projects.map((project) => project.owner_id),
     ...reviewerIds,
   ]);
 
-  return projects.map((project) => {
-    const latest = latestReviewByProject.get(project.id) ?? null;
+  const mapped = projects.map((project) => {
+    const projectReviews = (reviewsByProject.get(project.id) ?? []).filter(
+      (review) => {
+        const reviewer = profiles.get(review.reviewer_id) ?? null;
+        return reviewer !== null && !isPlaceholderPerson(reviewer);
+      },
+    );
+    const latest = projectReviews[0] ?? null;
     const statuses = requestStatusByProject.get(project.id);
     let reviewStatus: ProjectReviewStatus = "awaiting_review";
     if (latest) reviewStatus = "reviewed";
@@ -458,6 +517,7 @@ async function getPublishedProjectProofs(
     const reviewer = latest
       ? profiles.get(latest.reviewer_id) ?? null
       : null;
+    const uniqueMentors = new Set(projectReviews.map((review) => review.reviewer_id));
 
     return {
       ...project,
@@ -466,16 +526,414 @@ async function getPublishedProjectProofs(
       reviewerName: reviewer ? builderLabel(reviewer) : null,
       reviewerUsername: reviewer?.username ?? null,
       reviewSummary: latest ? reviewSummaryText(latest) : null,
+      reviewCount: projectReviews.length,
+      averageRating: average(projectReviews.map((review) => review.rating)),
+      mentorCount: uniqueMentors.size,
+      featured: false,
     };
+  });
+
+  const featuredIds = new Set(
+    [...mapped]
+      .filter((project) => project.reviewCount > 0)
+      .sort(
+        (a, b) =>
+          b.reviewCount - a.reviewCount ||
+          (b.averageRating ?? 0) - (a.averageRating ?? 0),
+      )
+      .slice(0, 8)
+      .map((project) => project.id),
+  );
+
+  return mapped.map((project) => ({
+    ...project,
+    featured: featuredIds.has(project.id),
+  }));
+}
+
+async function getPublicMentors(limit = 36): Promise<DiscoverMentor[]> {
+  const admin = createAdminClient();
+  const [{ data: foundingRows }, { data: reviewRows }] = await Promise.all([
+    admin.from("profiles").select("*").eq("is_founding_mentor", true).limit(40),
+    admin
+      .from("reviews")
+      .select("reviewer_id, rating, project_id, created_at")
+      .eq("moderation_status", "visible")
+      .order("created_at", { ascending: false })
+      .limit(400),
+  ]);
+
+  const reviewerIds = [
+    ...new Set(
+      (Array.isArray(reviewRows) ? reviewRows : [])
+        .map((row) => (typeof row.reviewer_id === "string" ? row.reviewer_id : ""))
+        .filter(Boolean),
+    ),
+  ];
+
+  const extraProfiles =
+    reviewerIds.length > 0
+      ? await getPublicProfilesByAuthIds(reviewerIds)
+      : new Map<string, Profile>();
+
+  const byId = new Map<string, Profile>();
+  const byUsername = new Map<string, Profile>();
+  const addProfile = (profile: Profile) => {
+    const existing = byUsername.get(profile.username);
+    if (existing) {
+      if (!existing.is_founding_mentor && profile.is_founding_mentor) {
+        byId.delete(existing.id);
+        byId.set(profile.id, profile);
+        byUsername.set(profile.username, profile);
+      }
+      return;
+    }
+    byId.set(profile.id, profile);
+    byUsername.set(profile.username, profile);
+  };
+  for (const row of Array.isArray(foundingRows) ? foundingRows : []) {
+    const profile = mapProfile(row as Record<string, unknown>);
+    if (profile) addProfile(profile);
+  }
+  for (const profile of extraProfiles.values()) {
+    addProfile(profile);
+  }
+
+  const profiles = [...byId.values()];
+  if (profiles.length === 0) return [];
+
+  const ids = [...new Set(profiles.flatMap(profileAuthIds))];
+  const pointsByUser = new Map<string, number>();
+  const ratingsByMentor = new Map<string, number[]>();
+  const [contributions, events] = await Promise.all([
+    getMentorContributionMap(profiles),
+    ids.length > 0
+      ? admin.from("reputation_events").select("user_id, points").in("user_id", ids)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  if (Array.isArray(reviewRows)) {
+    for (const profile of profiles) {
+      const keys = new Set(profileAuthIds(profile));
+      const ratings: number[] = [];
+      for (const row of reviewRows) {
+        const reviewerId =
+          typeof row.reviewer_id === "string" ? row.reviewer_id : "";
+        const rating =
+          typeof row.rating === "number" ? row.rating : Number(row.rating);
+        if (!keys.has(reviewerId) || !Number.isFinite(rating)) continue;
+        ratings.push(rating);
+      }
+      ratingsByMentor.set(profile.id, ratings);
+    }
+  }
+
+  const reviewedProjectIds = [
+    ...new Set(
+      (Array.isArray(reviewRows) ? reviewRows : [])
+        .map((row) => (typeof row.project_id === "string" ? row.project_id : ""))
+        .filter(Boolean),
+    ),
+  ];
+  const publishedById = new Map<string, ReviewedProjectPreview>();
+  if (reviewedProjectIds.length > 0) {
+    const { data: projectRows } = await admin
+      .from("projects")
+      .select("id, title, slug, status")
+      .in("id", reviewedProjectIds)
+      .eq("status", "published");
+    if (Array.isArray(projectRows)) {
+      for (const row of projectRows) {
+        if (
+          typeof row.id === "string" &&
+          typeof row.title === "string" &&
+          typeof row.slug === "string"
+        ) {
+          publishedById.set(row.id, {
+            id: row.id,
+            title: row.title,
+            slug: row.slug,
+          });
+        }
+      }
+    }
+  }
+
+  const reviewedByMentor = new Map<string, ReviewedProjectPreview[]>();
+  if (Array.isArray(reviewRows)) {
+    for (const profile of profiles) {
+      const keys = new Set(profileAuthIds(profile));
+      const seen = new Set<string>();
+      const list: ReviewedProjectPreview[] = [];
+      for (const row of reviewRows) {
+        const reviewerId =
+          typeof row.reviewer_id === "string" ? row.reviewer_id : "";
+        const projectId =
+          typeof row.project_id === "string" ? row.project_id : "";
+        if (!keys.has(reviewerId) || seen.has(projectId)) continue;
+        const project = publishedById.get(projectId);
+        if (!project) continue;
+        seen.add(projectId);
+        list.push(project);
+        if (list.length >= 4) break;
+      }
+      reviewedByMentor.set(profile.id, list);
+    }
+  }
+
+  if (Array.isArray(events.data)) {
+    for (const row of events.data) {
+      const userId = typeof row.user_id === "string" ? row.user_id : "";
+      const points =
+        typeof row.points === "number" ? row.points : Number(row.points);
+      if (!userId || !Number.isFinite(points)) continue;
+      pointsByUser.set(userId, (pointsByUser.get(userId) ?? 0) + points);
+    }
+  }
+
+  return profiles
+    .map((profile) => {
+      const keys = profileAuthIds(profile);
+      const points = keys.reduce(
+        (total, id) => total + (pointsByUser.get(id) ?? 0),
+        0,
+      );
+      const mentorContributions =
+        contributions.get(profile.id) ?? EMPTY_MENTOR_CONTRIBUTIONS;
+      const authority =
+        (profile.is_founding_mentor ? 4 : 0) +
+        (hasProfileValue(profile.mentor_statement) ? 2 : 0) +
+        (profile.expertise.length > 0 ? 1 : 0);
+      return {
+        profile,
+        points,
+        level: getReputationBand(points).name,
+        reviewsGiven: mentorContributions.reviewsContributed,
+        averageRating: average(ratingsByMentor.get(profile.id) ?? []),
+        contributions: mentorContributions,
+        reviewedProjects: reviewedByMentor.get(profile.id) ?? [],
+        authority,
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.authority - a.authority ||
+        b.contributions.reviewsContributed - a.contributions.reviewsContributed ||
+        builderLabel(a.profile).localeCompare(builderLabel(b.profile)),
+    )
+    .slice(0, limit)
+    .map(({ authority: _authority, ...mentor }) => mentor);
+}
+
+async function getRecentPublicReviews(limit = 6): Promise<DiscoverRecentReview[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("reviews")
+    .select("*")
+    .eq("moderation_status", "visible")
+    .order("created_at", { ascending: false })
+    .limit(limit * 3);
+
+  if (error || !Array.isArray(data)) return [];
+  const reviews = data
+    .map((row) => mapReview(row as Record<string, unknown>))
+    .filter((row): row is Review => row !== null);
+
+  const projectIds = [...new Set(reviews.map((review) => review.project_id))];
+  const { data: projectRows } = await admin
+    .from("projects")
+    .select("id, title, slug, status")
+    .in("id", projectIds)
+    .eq("status", "published");
+
+  const projects = new Map<string, { title: string; slug: string }>();
+  if (Array.isArray(projectRows)) {
+    for (const row of projectRows) {
+      if (
+        typeof row.id === "string" &&
+        typeof row.title === "string" &&
+        typeof row.slug === "string"
+      ) {
+        projects.set(row.id, { title: row.title, slug: row.slug });
+      }
+    }
+  }
+
+  const profiles = await getPublicProfilesByAuthIds(
+    reviews.map((review) => review.reviewer_id),
+  );
+
+  const items: DiscoverRecentReview[] = [];
+  for (const review of reviews) {
+    const project = projects.get(review.project_id);
+    const excerpt = clipDiscoverText(
+      review.review_text || review.what_works_well || review.recommendations,
+      140,
+    );
+    if (!project || !excerpt) continue;
+    const reviewer = profiles.get(review.reviewer_id) ?? null;
+    items.push({
+      id: review.id,
+      excerpt,
+      createdAt: review.created_at,
+      reviewerName: builderLabel(reviewer),
+      reviewerUsername: reviewer?.username ?? null,
+      reviewerHeadline: reviewer?.headline ?? null,
+      projectTitle: project.title,
+      projectSlug: project.slug,
+    });
+    if (items.length >= limit) break;
+  }
+  return items;
+}
+
+function markFeaturedProjects(
+  projects: DiscoverProjectProof[],
+): DiscoverProjectProof[] {
+  const featuredIds = new Set(
+    [...projects]
+      .filter((project) => project.reviewCount > 0)
+      .sort(
+        (a, b) =>
+          b.reviewCount - a.reviewCount ||
+          (b.averageRating ?? 0) - (a.averageRating ?? 0),
+      )
+      .slice(0, 8)
+      .map((project) => project.id),
+  );
+  return projects.map((project) => ({
+    ...project,
+    featured: featuredIds.has(project.id),
+  }));
+}
+
+function publicProjects(projects: DiscoverProjectProof[]) {
+  return markFeaturedProjects(
+    dedupeProjects(projects.filter((project) => !isPlaceholderProject(project))),
+  );
+}
+
+function publicMentors(
+  mentors: DiscoverMentor[],
+  allowedProjectIds: Set<string>,
+) {
+  return dedupeMentors(
+    mentors.flatMap((mentor) => {
+      if (isPlaceholderPerson(mentor.profile)) return [];
+      const reviewedProjects = mentor.reviewedProjects.filter((project) =>
+        allowedProjectIds.has(project.id),
+      );
+      if (reviewedProjects.length === 0) return [];
+      return [
+        {
+          ...mentor,
+          reviewedProjects,
+          reviewsGiven: reviewedProjects.length,
+        },
+      ];
+    }),
+  );
+}
+
+function publicRecentReviews(
+  reviews: DiscoverRecentReview[],
+  allowedSlugs: Set<string>,
+) {
+  return reviews.filter((review) => {
+    if (!allowedSlugs.has(review.projectSlug)) return false;
+    if (
+      isPlaceholderProject({
+        title: review.projectTitle,
+        slug: review.projectSlug,
+      })
+    ) {
+      return false;
+    }
+    return !isPlaceholderPerson({
+      username: review.reviewerUsername,
+      full_name: review.reviewerName,
+    });
   });
 }
 
+function trendingQualityThreshold() {
+  const read = (key: string, fallback: number) => {
+    const raw = process.env[key];
+    if (!raw) return fallback;
+    const value = Number.parseInt(raw, 10);
+    return Number.isFinite(value) && value >= 0 ? value : fallback;
+  };
+  return {
+    minReviewedProjects: read(
+      "ALVORA_TRENDING_MIN_PROJECTS",
+      TRENDING_MIN_QUALITY.minReviewedProjects,
+    ),
+    minMentorsWithReviews: read(
+      "ALVORA_TRENDING_MIN_MENTORS",
+      TRENDING_MIN_QUALITY.minMentorsWithReviews,
+    ),
+    minReviews: read("ALVORA_TRENDING_MIN_REVIEWS", TRENDING_MIN_QUALITY.minReviews),
+  };
+}
+
 export async function getPublicDiscoverCatalog(): Promise<PublicDiscoverCatalog> {
-  const [mentors, projects] = await Promise.all([
-    getFoundingMentors(20),
-    getPublishedProjectProofs(24),
+  const [mentorsRaw, projectsRaw, recentRaw] = await Promise.all([
+    getPublicMentors(36),
+    getPublishedProjectProofs(48),
+    getRecentPublicReviews(8),
   ]);
-  return { mentors, projects };
+  const projects = publicProjects(projectsRaw);
+  const mentors = publicMentors(
+    mentorsRaw,
+    new Set(projects.map((project) => project.id)),
+  );
+  const recentReviews = publicRecentReviews(
+    recentRaw,
+    new Set(projects.map((project) => project.slug)),
+  );
+  const foundingShowcase = mentors.filter(meetsFoundingShowcaseBar);
+  return {
+    mentors,
+    projects,
+    featured: projects.filter((project) => project.featured),
+    recentReviews,
+    foundingShowcase,
+    stats: {
+      projects: projects.length,
+      mentors: mentors.length,
+      reviews: projects.reduce((total, project) => total + project.reviewCount, 0),
+      foundingMentors: foundingShowcase.length,
+    },
+  };
+}
+
+export async function getTrendingOnAlvora() {
+  const catalog = await getPublicDiscoverCatalog();
+  const visible = catalogMeetsTrendingQuality(
+    catalog,
+    trendingQualityThreshold(),
+  );
+  if (!visible) {
+    return { visible: false, projects: [], mentors: [] };
+  }
+  const projects = [...catalog.projects]
+    .filter((project) => project.reviewCount > 0)
+    .sort(
+      (a, b) =>
+        b.reviewCount - a.reviewCount ||
+        (b.averageRating ?? 0) - (a.averageRating ?? 0),
+    )
+    .slice(0, 3);
+  const mentors = [...catalog.mentors]
+    .filter((mentor) => mentor.reviewsGiven > 0)
+    .sort(
+      (a, b) =>
+        b.reviewsGiven - a.reviewsGiven ||
+        Number(b.profile.is_founding_mentor) -
+          Number(a.profile.is_founding_mentor),
+    )
+    .slice(0, 3);
+  return { visible: true, projects, mentors };
 }
 
 export async function getDiscoverFeed(userId: string): Promise<DiscoverFeed> {
@@ -515,4 +973,4 @@ export async function getDiscoverFeed(userId: string): Promise<DiscoverFeed> {
   };
 }
 
-export { builderLabel };
+export { builderLabel } from "@/lib/discover/presentation";

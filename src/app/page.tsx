@@ -1,7 +1,9 @@
 import Link from "next/link";
 
+import { TrendingOnAlvora } from "@/components/home/trending-on-alvora";
 import { WhatIsAlvora } from "@/components/home/what-is-alvora";
 import { Button } from "@/components/ui/button";
+import { getTrendingOnAlvora } from "@/lib/discover/queries";
 import { createClient } from "@/lib/supabase/server";
 
 const TRUST_BULLETS = [
@@ -37,6 +39,7 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const trending = await getTrendingOnAlvora();
 
   return (
     <main className="relative flex flex-1 flex-col">
@@ -90,6 +93,13 @@ export default async function HomePage() {
         </section>
 
         <WhatIsAlvora />
+
+        {trending.visible ? (
+          <TrendingOnAlvora
+            projects={trending.projects}
+            mentors={trending.mentors}
+          />
+        ) : null}
 
         <section className="border-t border-border/60">
           <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-8 sm:grid-cols-3 sm:px-6">

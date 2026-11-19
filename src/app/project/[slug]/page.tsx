@@ -5,6 +5,7 @@ import { ProjectView } from "@/components/projects/project-view";
 import { getPublishedProjectBySlug } from "@/lib/project/queries";
 import { getProfileByAuthId } from "@/lib/profile/queries";
 import { getPublicProjectInsights } from "@/lib/projects/workspace";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,10 @@ export default async function PublicProjectPage({ params }: PageProps) {
   const project = await getPublishedProjectBySlug(slug);
   if (!project) notFound();
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const [owner, performance] = await Promise.all([
     getProfileByAuthId(project.owner_id),
     getPublicProjectInsights(project.id),
@@ -40,6 +45,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
         project={project}
         owner={owner}
         performance={performance}
+        signedIn={Boolean(user)}
       />
     </div>
   );

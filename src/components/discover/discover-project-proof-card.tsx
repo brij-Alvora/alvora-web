@@ -1,14 +1,12 @@
 import Link from "next/link";
 
-import { formatDiscoverDate } from "@/lib/discover/format";
-import {
-  PROJECT_REVIEW_STATUS_LABEL,
-  loginNextHref,
-} from "@/lib/discover/presentation";
-import { builderLabel, type DiscoverProjectProof } from "@/lib/discover/queries";
+import { SignupGate } from "@/components/discover/signup-gate";
 import { ProjectThumbnail } from "@/components/projects/project-thumbnail";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatMarketplaceDate, formatRating } from "@/lib/discover/format";
+import { builderLabel } from "@/lib/discover/presentation";
+import type { DiscoverProjectProof } from "@/lib/discover/queries";
 
 type DiscoverProjectProofCardProps = {
   project: DiscoverProjectProof;
@@ -22,14 +20,12 @@ export function DiscoverProjectProofCard({
   const published = project.published_at || project.created_at;
   const builder = project.builder;
   const projectHref = `/project/${project.slug}`;
+  const reviewsHref = `${projectHref}#reviews`;
   const requestHref = `/validations/new?project_id=${project.id}`;
-  const actionHref = signedIn ? requestHref : loginNextHref(requestHref);
-  const reviewerHref = project.reviewerUsername
-    ? `/u/${project.reviewerUsername}`
-    : null;
+  const rating = formatRating(project.averageRating);
 
   return (
-    <Card className="h-full overflow-hidden shadow-sm">
+    <Card className="h-full overflow-hidden shadow-sm transition-shadow hover:shadow-md">
       <Link href={projectHref} className="block">
         <ProjectThumbnail
           src={project.thumbnail_url}
@@ -38,70 +34,79 @@ export function DiscoverProjectProofCard({
         />
       </Link>
       <CardContent className="space-y-3 p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {project.featured ? (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-primary">
+              Featured
+            </span>
+          ) : null}
+          {project.category ? (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {project.category}
+            </span>
+          ) : null}
+        </div>
         <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-wider text-primary">
-            {PROJECT_REVIEW_STATUS_LABEL[project.reviewStatus]}
-          </p>
           <h3 className="font-semibold tracking-tight">
             <Link href={projectHref} className="hover:underline">
               {project.title}
             </Link>
           </h3>
+          {project.short_description ? (
+            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+              {project.short_description}
+            </p>
+          ) : null}
           <p className="text-sm text-muted-foreground">
             {builder?.username ? (
               <Link href={`/u/${builder.username}`} className="hover:underline">
-                @{builder.username}
+                {builderLabel(builder)}
               </Link>
             ) : (
               builderLabel(builder)
             )}
-            {project.category ? ` · ${project.category}` : ""}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Published {formatDiscoverDate(published)}
           </p>
         </div>
-
-        {project.reviewStatus === "reviewed" ? (
-          <div className="space-y-1 rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              Reviewer{" "}
-              {project.reviewerName ? (
-                reviewerHref ? (
-                  <Link
-                    href={reviewerHref}
-                    className="text-foreground hover:underline"
-                  >
-                    {project.reviewerName}
-                  </Link>
-                ) : (
-                  <span className="text-foreground">{project.reviewerName}</span>
-                )
-              ) : (
-                <span className="text-foreground">Named reviewer</span>
-              )}
-            </p>
-            <p className="text-sm leading-6 text-foreground">
-              {project.reviewSummary ?? "A written review is on this project."}
-            </p>
+        {project.tags.length > 0 ? (
+          <ul className="flex flex-wrap gap-1.5">
+            {project.tags.slice(0, 4).map((tag) => (
+              <li
+                key={tag}
+                className="rounded-md border border-border/70 px-1.5 py-0.5 text-[11px] text-muted-foreground"
+              >
+                {tag}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <div>
+            <dt className="inline">Added </dt>
+            <dd className="inline text-foreground">{formatMarketplaceDate(published)}</dd>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {project.reviewStatus === "in_review"
-              ? "A mentor is reviewing this work."
-              : "No written review yet."}
-          </p>
-        )}
-
+          <div>
+            <dt className="inline">Reviews </dt>
+            <dd className="inline tabular-nums text-foreground">{project.reviewCount}</dd>
+          </div>
+          <div>
+            <dt className="inline">Score </dt>
+            <dd className="inline tabular-nums text-foreground">{rating ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="inline">Reviewers </dt>
+            <dd className="inline tabular-nums text-foreground">{project.mentorCount}</dd>
+          </div>
+        </dl>
         <div className="flex flex-wrap gap-2">
           <Button asChild size="sm" variant="outline">
-            <Link href={projectHref}>View project</Link>
+            <Link href={projectHref}>View Project</Link>
           </Button>
-          <Button asChild size="sm">
-            <Link href={actionHref}>
-              {signedIn ? "Request a review" : "Sign in to request a review"}
-            </Link>
+          <Button asChild size="sm" variant="secondary">
+            <Link href={reviewsHref}>Read Reviews</Link>
           </Button>
+          <SignupGate signedIn={signedIn} href={requestHref}>
+            Request review
+          </SignupGate>
         </div>
       </CardContent>
     </Card>

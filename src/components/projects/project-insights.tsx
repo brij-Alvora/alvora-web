@@ -29,7 +29,7 @@ export function ProjectInsights({
   ];
 
   return (
-    <Card className="shadow-sm">
+    <Card id="reviews" className="scroll-mt-20 shadow-sm">
       <CardContent className="space-y-4 p-5 sm:p-8">
         <div>
           <div className="flex flex-wrap items-center gap-2">

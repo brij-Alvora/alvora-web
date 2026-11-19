@@ -13,3 +13,30 @@ export function formatDiscoverDate(isoDate: string | null | undefined) {
 export function formatDiscoverDateTime(isoDate: string | null | undefined) {
   return formatDiscoverDate(isoDate);
 }
+
+const SHORT_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+export function formatMarketplaceDate(isoDate: string | null | undefined) {
+  if (!isoDate) return "";
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getDate()} ${SHORT_MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+export function formatRating(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return null;
+  return value.toFixed(1);
+}

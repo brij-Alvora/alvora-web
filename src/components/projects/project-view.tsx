@@ -5,6 +5,7 @@ import type { Profile } from "@/lib/supabase/types";
 import type { Project } from "@/lib/supabase/types";
 import { hasProfileValue } from "@/lib/profile/presentation";
 import { displayUrlHost } from "@/lib/profile/presentation";
+import { SignupGate } from "@/components/discover/signup-gate";
 import { ReportButton } from "@/components/reports/report-button";
 import { ProjectInsights } from "@/components/projects/project-insights";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,15 @@ type ProjectViewProps = {
   project: Project;
   owner: Profile | null;
   performance?: ProjectPerformance | null;
+  signedIn?: boolean;
 };
 
-export function ProjectView({ project, owner, performance }: ProjectViewProps) {
+export function ProjectView({
+  project,
+  owner,
+  performance,
+  signedIn = false,
+}: ProjectViewProps) {
   const links = [
     project.demo_url
       ? { href: project.demo_url, label: "Live demo", icon: ExternalLink }
@@ -97,11 +104,12 @@ export function ProjectView({ project, owner, performance }: ProjectViewProps) {
                 </Link>
               </Button>
             ))}
-            <Button asChild size="sm">
-              <Link href={`/validations/new?project_id=${project.id}`}>
-                Request Validation
-              </Link>
-            </Button>
+            <SignupGate
+              signedIn={signedIn}
+              href={`/validations/new?project_id=${project.id}`}
+            >
+              Request Validation
+            </SignupGate>
             <ReportButton targetType="project" targetId={project.id} />
           </div>
         </CardContent>
