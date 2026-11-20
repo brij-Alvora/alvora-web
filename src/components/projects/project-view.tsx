@@ -19,6 +19,7 @@ type ProjectViewProps = {
   owner: Profile | null;
   performance?: ProjectPerformance | null;
   signedIn?: boolean;
+  isOwner?: boolean;
 };
 
 export function ProjectView({
@@ -26,6 +27,7 @@ export function ProjectView({
   owner,
   performance,
   signedIn = false,
+  isOwner = false,
 }: ProjectViewProps) {
   const links = [
     project.demo_url
@@ -104,12 +106,18 @@ export function ProjectView({
                 </Link>
               </Button>
             ))}
-            <SignupGate
-              signedIn={signedIn}
-              href={`/validations/new?project_id=${project.id}`}
-            >
-              Request Validation
-            </SignupGate>
+            {isOwner ? (
+              <SignupGate
+                signedIn={signedIn}
+                href={`/validations/new?project_id=${project.id}`}
+              >
+                Request validation
+              </SignupGate>
+            ) : !signedIn ? (
+              <SignupGate signedIn={false} href="/register?intent=builder">
+                Get your work reviewed
+              </SignupGate>
+            ) : null}
             <ReportButton targetType="project" targetId={project.id} />
           </div>
         </CardContent>

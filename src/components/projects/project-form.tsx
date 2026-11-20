@@ -90,7 +90,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
         }
         setSuccess(result.success ?? "Saved");
         if (result.project?.status === "published") {
-          router.push(`/project/${result.project.slug}`);
+          router.push(`/validations/new?project_id=${result.project.id}`);
           return;
         }
         if (result.project && !project?.id) {

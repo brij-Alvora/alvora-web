@@ -9,6 +9,11 @@ import {
 } from "@/lib/auth/captcha";
 import { clientIpFromHeaders } from "@/lib/auth/client-ip";
 import { safeNextPath } from "@/lib/auth/next-path";
+import {
+  confirmationNextPath,
+  resolveAfterAuth,
+} from "@/lib/onboarding/flywheel";
+import { loadFlywheelProgress } from "@/lib/onboarding/progress";
 import { toUserSafeError } from "@/lib/errors/user-safe";
 import {
   attachAcquisitionUser,
@@ -63,6 +68,8 @@ export async function loginAction(
   if (sessionData.user) {
     const { sessionId } = await readAcquisitionContext();
     await attachAcquisitionUser(sessionId, sessionData.user.id);
+    const progress = await loadFlywheelProgress(sessionData.user.id);
+    redirect(resolveAfterAuth({ explicitNext: next, progress }));
   }
 
   redirect(safeNextPath(next));
@@ -100,7 +107,9 @@ export async function registerAction(
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: absoluteUrl("/auth/callback"),
+      emailRedirectTo: absoluteUrl(
+        `/auth/callback?next=${encodeURIComponent(confirmationNextPath())}`,
+      ),
       data: {
         full_name: parsed.data.fullName,
         username: parsed.data.username,
@@ -123,11 +132,16 @@ export async function registerAction(
   if (data.user && !data.session) {
     return {
       success:
-        "Check your email to confirm your account, then sign in.",
+        "Check your email to confirm your account, then sign in. You will continue to your profile.",
     };
   }
 
-  redirect(safeNextPath(next || "/dashboard"));
+  if (data.user) {
+    const progress = await loadFlywheelProgress(data.user.id);
+    redirect(resolveAfterAuth({ explicitNext: next, progress }));
+  }
+
+  redirect(confirmationNextPath());
 }
 
 export async function logoutAction(): Promise<void> {
@@ -190,7 +204,11 @@ export async function resendConfirmationAction(
   const { error } = await supabase.auth.resend({
     type: "signup",
     email: parsed.data.email,
-    options: { emailRedirectTo: absoluteUrl("/auth/callback") },
+    options: {
+      emailRedirectTo: absoluteUrl(
+        `/auth/callback?next=${encodeURIComponent(confirmationNextPath())}`,
+      ),
+    },
   });
   if (error) {
     return {

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { MentorAuthority } from "@/components/mentors/mentor-authority";
 import { AvatarUploader } from "@/components/profile/avatar-uploader";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { continueAfterProfile } from "@/lib/onboarding/flywheel";
+import { readFlywheelIntent } from "@/lib/onboarding/progress";
 import { hasProfileValue } from "@/lib/profile/presentation";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -31,6 +33,12 @@ export default async function EditProfilePage() {
   }
 
   const profile = await getCurrentProfile();
+  const intent = await readFlywheelIntent(
+    profile?.is_founding_mentor ? "reviewer" : undefined,
+  );
+  const continueHref = continueAfterProfile(
+    profile?.is_founding_mentor ? "reviewer" : intent,
+  );
   const displayName = hasProfileValue(profile?.full_name)
     ? profile.full_name
     : hasProfileValue(profile?.username)
@@ -78,7 +86,15 @@ export default async function EditProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ProfileForm profile={profile} />
+          <ProfileForm
+            profile={profile}
+            continueHref={continueHref}
+            continueLabel={
+              continueHref === "/validations"
+                ? "Open validation queue"
+                : "Publish a project"
+            }
+          />
         </CardContent>
       </Card>
     </div>

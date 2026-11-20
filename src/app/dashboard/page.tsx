@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { BuilderHome } from "@/components/dashboard/builder-home";
 import { getBuilderStats } from "@/lib/dashboard/stats";
+import { loadFlywheelProgress } from "@/lib/onboarding/progress";
 import { getMyProjects } from "@/lib/project/queries";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -27,6 +28,10 @@ export default async function DashboardPage() {
     console.error("[dashboard] getCurrentProfile failed", error);
     return null;
   });
+  const flywheel = await loadFlywheelProgress(user.id).catch((error) => {
+    console.error("[dashboard] loadFlywheelProgress failed", error);
+    return null;
+  });
   const [stats, projects, validationRequests] = await Promise.all([
     getBuilderStats(user.id),
     getMyProjects().catch((error) => {
@@ -46,6 +51,7 @@ export default async function DashboardPage() {
       stats={stats}
       projects={projects}
       validationRequests={validationRequests.slice(0, 5)}
+      flywheel={flywheel}
     />
   );
 }

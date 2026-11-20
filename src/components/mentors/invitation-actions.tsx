@@ -35,14 +35,21 @@ export function InvitationActions({
         <p className="text-sm text-muted-foreground">
           Your Founding Mentor status is already approved for Beta Cohort 2026.
         </p>
-        <Button asChild size="lg">
-          <Link href="/profile/edit">Complete your mentor profile</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="lg">
+            <Link href="/validations">Open validation queue</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href="/profile/edit">Complete your mentor profile</Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
-  const href = isSignedIn ? "/profile/edit" : "/register?next=/profile/edit";
+  const href = isSignedIn
+    ? "/profile/edit"
+    : "/register?intent=reviewer&next=/profile/edit";
 
   return (
     <div className="space-y-3">
@@ -61,7 +68,7 @@ export function InvitationActions({
       ) : (
         <p className="max-w-md text-sm leading-6 text-muted-foreground">
           <Link
-            href="/login?next=/profile/edit"
+            href="/login?intent=reviewer&next=/profile/edit"
             className="font-medium text-foreground hover:underline"
             onClick={trackContinue}
           >

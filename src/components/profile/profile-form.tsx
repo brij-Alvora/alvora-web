@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,9 +20,15 @@ import { Textarea } from "@/components/ui/textarea";
 
 type ProfileFormProps = {
   profile: Profile | null;
+  continueHref?: string;
+  continueLabel?: string;
 };
 
-export function ProfileForm({ profile }: ProfileFormProps) {
+export function ProfileForm({
+  profile,
+  continueHref,
+  continueLabel,
+}: ProfileFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -228,9 +235,16 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         )}
       </div>
 
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Saving..." : "Save profile"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Saving..." : "Save profile"}
+        </Button>
+        {success && continueHref ? (
+          <Button asChild variant="outline">
+            <Link href={continueHref}>{continueLabel ?? "Continue"}</Link>
+          </Button>
+        ) : null}
+      </div>
     </form>
   );
 }

@@ -164,7 +164,9 @@ export function RegisterForm({ nextPath = "/dashboard" }: { nextPath?: string })
       {success ? (
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button asChild variant="outline" className="flex-1">
-            <Link href="/login">Sign in</Link>
+            <Link href={`/login?next=${encodeURIComponent("/profile/edit")}`}>
+              Sign in
+            </Link>
           </Button>
           <Button
             type="button"

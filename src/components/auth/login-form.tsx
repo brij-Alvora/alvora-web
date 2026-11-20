@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { loginAction } from "@/lib/actions/auth";
+import { loginAction, resendConfirmationAction } from "@/lib/actions/auth";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -29,11 +29,13 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
   const [error, setError] = useState<string | null>(
     initialError ? (CALLBACK_ERRORS[initialError] ?? initialError) : null,
   );
+  const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -41,6 +43,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
 
   const onSubmit = (values: LoginInput) => {
     setError(null);
+    setSuccess(null);
     startTransition(async () => {
       const result = await loginAction(values, nextPath);
       if (result?.error) setError(result.error);
@@ -52,6 +55,11 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {success && (
+        <Alert variant="success">
+          <AlertDescription>{success}</AlertDescription>
         </Alert>
       )}
 
@@ -94,10 +102,33 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
         {isPending ? "Signing in..." : "Sign in"}
       </Button>
 
+      {initialError === "unconfirmed" || error?.includes("Confirm your email") ? (
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full"
+          disabled={isPending}
+          onClick={() => {
+            const email = getValues("email");
+            setError(null);
+            startTransition(async () => {
+              const result = await resendConfirmationAction(email);
+              if (result.error) setError(result.error);
+              if (result.success) setSuccess(result.success);
+            });
+          }}
+        >
+          Resend confirmation email
+        </Button>
+      ) : null}
+
       <p className="text-center text-sm text-muted-foreground">
         No account?{" "}
-        <Link href="/register" className="font-medium text-foreground underline-offset-4 hover:underline">
-          Create one
+        <Link
+          href="/register?intent=builder"
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
+          Get your work reviewed
         </Link>
       </p>
     </form>

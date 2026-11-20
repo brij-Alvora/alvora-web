@@ -113,7 +113,7 @@ export function ProjectCard({
           {showOwnerActions && project.status === "published" ? (
             <Button asChild size="sm" variant="outline">
               <Link href={`/validations/new?project_id=${project.id}`}>
-                Validate
+                Request validation
               </Link>
             </Button>
           ) : null}

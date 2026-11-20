@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { registerHref } from "@/lib/onboarding/flywheel";
 
 type SignupGateProps = {
   signedIn: boolean;
@@ -11,6 +12,7 @@ type SignupGateProps = {
   children: React.ReactNode;
   className?: string;
   variant?: "button" | "link";
+  intent?: "builder" | "reviewer";
 };
 
 export function SignupGate({
@@ -19,6 +21,7 @@ export function SignupGate({
   children,
   className,
   variant = "button",
+  intent = "builder",
 }: SignupGateProps) {
   const [open, setOpen] = useState(false);
 
@@ -48,14 +51,20 @@ export function SignupGate({
           {children}
         </Button>
       )}
-      {open ? <SignupModal onClose={() => setOpen(false)} /> : null}
+      {open ? <SignupModal intent={intent} onClose={() => setOpen(false)} /> : null}
     </>
   );
 }
 
-export function SignupModal({ onClose }: { onClose: () => void }) {
+export function SignupModal({
+  onClose,
+  intent = "builder",
+}: {
+  onClose: () => void;
+  intent?: "builder" | "reviewer";
+}) {
   const titleId = useId();
-  const next = "/discover";
+  const href = registerHref(intent);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -79,14 +88,18 @@ export function SignupModal({ onClose }: { onClose: () => void }) {
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id={titleId} className="font-display text-2xl tracking-tight text-foreground">
-          Get Trusted Reviews From Experienced Builders
+          {intent === "reviewer"
+            ? "Write your first review"
+            : "Get a written review of your work"}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Join Alvora to publish projects, request reviews, and build credibility.
+          {intent === "reviewer"
+            ? "Create an account, confirm your email, complete your profile, then open the validation queue."
+            : "Create an account, confirm your email, complete your profile, then publish a project and request validation."}
         </p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
           <Button asChild className="sm:flex-1">
-            <Link href={`/register?next=${encodeURIComponent(next)}`}>Create Account</Link>
+            <Link href={href}>Create account</Link>
           </Button>
           <Button type="button" variant="outline" className="sm:flex-1" onClick={onClose}>
             Not now
@@ -96,4 +109,3 @@ export function SignupModal({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
-

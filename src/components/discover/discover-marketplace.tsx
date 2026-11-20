@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 
 type DiscoverMarketplaceProps = {
   signedIn: boolean;
+  currentUserId?: string | null;
   initialTab: DiscoverTab;
   initialQuery: string;
   initialCategory: string;
@@ -64,6 +65,7 @@ function Chip({
 
 export function DiscoverMarketplace({
   signedIn,
+  currentUserId = null,
   initialTab,
   initialQuery,
   initialCategory,
@@ -274,6 +276,7 @@ export function DiscoverMarketplace({
                   key={project.id}
                   project={project}
                   signedIn={signedIn}
+                  isOwner={currentUserId === project.owner_id}
                 />
               ))}
             </div>
@@ -283,8 +286,8 @@ export function DiscoverMarketplace({
 
       {tab === "mentors" && mentors.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          <Link href="/founding-mentors" className="font-medium underline underline-offset-4">
-            Become a Founding Mentor
+          <Link href="/register?intent=reviewer" className="font-medium underline underline-offset-4">
+            Start reviewing
           </Link>
         </p>
       ) : null}

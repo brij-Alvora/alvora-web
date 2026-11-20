@@ -2,6 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { isEmailConfirmed } from "@/lib/auth/email-confirmed";
+import {
+  FLYWHEEL_INTENT_COOKIE,
+  parseFlywheelIntent,
+} from "@/lib/onboarding/flywheel";
 import type { Database } from "@/lib/supabase/types";
 
 const PROTECTED_PREFIXES = [
@@ -61,6 +65,18 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+  const intentParam = request.nextUrl.searchParams.get("intent");
+  if (intentParam === "builder" || intentParam === "reviewer") {
+    supabaseResponse.cookies.set(
+      FLYWHEEL_INTENT_COOKIE,
+      parseFlywheelIntent(intentParam),
+      {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+      },
+    );
+  }
   const isProtected = PROTECTED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );

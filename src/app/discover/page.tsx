@@ -40,11 +40,12 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-10 px-4 py-8 sm:px-6 sm:py-10">
-      <DiscoverHero stats={catalog.stats} />
+      <DiscoverHero stats={catalog.stats} signedIn={Boolean(user)} />
       <DiscoverFeaturedCarousel projects={catalog.featured} />
       <div id="projects" className="scroll-mt-24">
         <DiscoverMarketplace
           signedIn={Boolean(user)}
+          currentUserId={user?.id ?? null}
           initialTab={tab}
           initialQuery={q}
           initialCategory={category}

@@ -11,11 +11,13 @@ import type { DiscoverProjectProof } from "@/lib/discover/queries";
 type DiscoverProjectProofCardProps = {
   project: DiscoverProjectProof;
   signedIn: boolean;
+  isOwner?: boolean;
 };
 
 export function DiscoverProjectProofCard({
   project,
   signedIn,
+  isOwner = false,
 }: DiscoverProjectProofCardProps) {
   const published = project.published_at || project.created_at;
   const builder = project.builder;
@@ -104,9 +106,11 @@ export function DiscoverProjectProofCard({
           <Button asChild size="sm" variant="secondary">
             <Link href={reviewsHref}>Read Reviews</Link>
           </Button>
-          <SignupGate signedIn={signedIn} href={requestHref}>
-            Request review
-          </SignupGate>
+          {isOwner ? (
+            <SignupGate signedIn={signedIn} href={requestHref}>
+              Request validation
+            </SignupGate>
+          ) : null}
         </div>
       </CardContent>
     </Card>

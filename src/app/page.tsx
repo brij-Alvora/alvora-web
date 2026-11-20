@@ -82,7 +82,7 @@ export default async function HomePage() {
             ) : (
               <>
                 <Button asChild size="lg">
-                  <Link href="/register">Create your builder profile</Link>
+                  <Link href="/register?intent=builder">Get your work reviewed</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
                   <Link href="/login">Sign in</Link>

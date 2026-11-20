@@ -12,6 +12,7 @@ import { MentorAuthority } from "@/components/mentors/mentor-authority";
 import { FoundingMentorCredential } from "@/components/mentors/founding-mentor-credential";
 import { FOUNDING_MENTOR_THANKS } from "@/lib/mentors/copy";
 import { FirstRun } from "@/components/onboarding/first-run";
+import type { FlywheelProgress } from "@/lib/onboarding/flywheel";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ReputationCard } from "@/components/reputation/reputation-card";
 import { ValidationRequestList } from "@/components/validation/validation-request-list";
@@ -35,6 +36,7 @@ type BuilderHomeProps = {
   stats: BuilderStats;
   projects: Project[];
   validationRequests: ValidationRequestWithProject[];
+  flywheel: FlywheelProgress | null;
 };
 
 export function BuilderHome({
@@ -43,6 +45,7 @@ export function BuilderHome({
   stats,
   projects,
   validationRequests,
+  flywheel,
 }: BuilderHomeProps) {
   const displayName = hasProfileValue(profile?.full_name)
     ? profile.full_name
@@ -124,15 +127,7 @@ export function BuilderHome({
         </div>
       ) : null}
 
-      <FirstRun
-        profilePercent={completion.percent}
-        hasPublishedProject={projects.some(
-          (project) => project.status === "published",
-        )}
-        hasValidationOrReview={
-          stats.validationRequests > 0 || stats.reviewsSubmitted > 0
-        }
-      />
+      {flywheel ? <FirstRun progress={flywheel} /> : null}
 
       <Card className="shadow-sm">
         <CardContent className="flex flex-col gap-6 p-5 sm:flex-row sm:items-center sm:p-6">

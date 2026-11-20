@@ -46,6 +46,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
         owner={owner}
         performance={performance}
         signedIn={Boolean(user)}
+        isOwner={user?.id === project.owner_id}
       />
     </div>
   );

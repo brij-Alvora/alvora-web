@@ -3,12 +3,14 @@ import Link from "next/link";
 import { StatCounter } from "@/components/discover/stat-counter";
 import { Button } from "@/components/ui/button";
 import type { DiscoverMarketplaceStats } from "@/lib/discover/queries";
+import { FLYWHEEL_PATHS, registerHref } from "@/lib/onboarding/flywheel";
 
 type DiscoverHeroProps = {
   stats: DiscoverMarketplaceStats;
+  signedIn?: boolean;
 };
 
-export function DiscoverHero({ stats }: DiscoverHeroProps) {
+export function DiscoverHero({ stats, signedIn = false }: DiscoverHeroProps) {
   return (
     <section className="relative overflow-hidden rounded-2xl border border-border/70 bg-card px-5 py-8 shadow-sm sm:px-8 sm:py-10">
       <div
@@ -28,10 +30,22 @@ export function DiscoverHero({ stats }: DiscoverHeroProps) {
         </p>
         <div className="flex flex-wrap gap-3">
           <Button asChild size="lg">
-            <Link href="#projects">Explore reviewed work</Link>
+            <Link
+              href={
+                signedIn ? FLYWHEEL_PATHS.publish : registerHref("builder")
+              }
+            >
+              Get your work reviewed
+            </Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-            <Link href="/founding-mentors">Become a Founding Mentor</Link>
+            <Link
+              href={
+                signedIn ? FLYWHEEL_PATHS.reviewQueue : registerHref("reviewer")
+              }
+            >
+              Start reviewing
+            </Link>
           </Button>
         </div>
       </div>

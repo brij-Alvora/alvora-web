@@ -41,7 +41,8 @@ export default async function ValidationCenterPage() {
             Validation Center
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Request product, UX, technical, idea, or AI-agent reviews.
+            Builders request validation here. Reviewers use Open for review to
+            submit a written first review.
           </p>
         </div>
         <Button asChild>
@@ -76,7 +77,7 @@ export default async function ValidationCenterPage() {
         </p>
         <ValidationRequestList
           requests={reviewable}
-          emptyLabel="No open validation requests to review right now."
+          emptyLabel="No open validation requests to review right now. When a builder requests validation, it appears here."
         />
       </section>
     </div>

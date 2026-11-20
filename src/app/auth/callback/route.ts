@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { safeNextPath } from "@/lib/auth/next-path";
+import { confirmationNextPath } from "@/lib/onboarding/flywheel";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = safeNextPath(searchParams.get("next"));
+  const next = safeNextPath(searchParams.get("next") || confirmationNextPath());
 
   if (code) {
     const supabase = await createClient();
