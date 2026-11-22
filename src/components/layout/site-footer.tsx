@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { BrandLockup } from "@/components/brand/alvora-mark";
+import { SUPPORT_EMAIL, SUPPORT_MAILTO } from "@/lib/legal/contact";
 
 export function SiteFooter() {
   return (
@@ -9,6 +10,12 @@ export function SiteFooter() {
         <div className="flex flex-col gap-1">
           <BrandLockup href="/" size="sm" />
           <p>Builder identity and validation</p>
+          <p>
+            Support:{" "}
+            <a href={SUPPORT_MAILTO} className="hover:text-foreground">
+              {SUPPORT_EMAIL}
+            </a>
+          </p>
         </div>
         <nav className="flex flex-wrap gap-4">
           <Link href="/discover" className="hover:text-foreground">

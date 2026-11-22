@@ -1,9 +1,14 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { firstParam, type SearchValues } from "@/lib/admin/params";
 import { SupportForm } from "@/components/support/support-form";
 import { formatDiscoverDate } from "@/lib/discover/format";
+import {
+  PRIVACY_EMAIL,
+  PRIVACY_MAILTO,
+  SUPPORT_EMAIL,
+  SUPPORT_MAILTO,
+} from "@/lib/legal/contact";
 import { getMySupportTickets } from "@/lib/support/queries";
 import {
   SUPPORT_CATEGORY_LABELS,
@@ -28,7 +33,35 @@ export default async function SupportPage({ searchParams }: PageProps) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/support");
+
+  if (!user) {
+    return (
+      <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Need help?</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Email us. During beta we reply from the same inbox.
+          </p>
+        </div>
+        <Card className="shadow-sm">
+          <CardContent className="space-y-3 p-5 text-sm sm:p-6">
+            <p>
+              Email:{" "}
+              <a href={SUPPORT_MAILTO} className="underline underline-offset-4">
+                {SUPPORT_EMAIL}
+              </a>
+            </p>
+            <p>
+              Privacy:{" "}
+              <a href={PRIVACY_MAILTO} className="underline underline-offset-4">
+                {PRIVACY_EMAIL}
+              </a>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const params = await searchParams;
   const restricted = firstParam(params, "restricted") === "1";
@@ -40,7 +73,11 @@ export default async function SupportPage({ searchParams }: PageProps) {
         <h1 className="text-2xl font-semibold tracking-tight">Support Center</h1>
         <p className="text-sm text-muted-foreground">
           Open a ticket for account, project, validation, review, bugs, or
-          features.
+          features. You can also email{" "}
+          <a href={SUPPORT_MAILTO} className="underline underline-offset-4">
+            {SUPPORT_EMAIL}
+          </a>
+          .
         </p>
         {restricted ? (
           <p className="mt-2 text-sm text-destructive">

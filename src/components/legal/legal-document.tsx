@@ -11,7 +11,7 @@ export function LegalDocument({ title, updated, children }: LegalDocumentProps) 
         <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
         <p className="text-sm text-muted-foreground">Last updated {updated}</p>
       </header>
-      <div className="space-y-4 text-sm leading-7 text-foreground/90 [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
+      <div className="space-y-4 text-sm leading-7 text-foreground/90 [&_a]:underline [&_a]:underline-offset-4 [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
         {children}
       </div>
     </article>

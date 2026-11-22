@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Alvora favicon 16 — dark</title>
+  <rect width="16" height="16" fill="#15201c"/>
+  <g transform="translate(8 1) scale(1)" fill="#f7f8f6">
+    <path d="M-1 0 L1 0 L5.722 12.974 L2.903 14 L0 6.024 L-2.903 14 L-5.722 12.974 Z"/>
+    <rect x="-0.738" y="9.012" width="1.475" height="2"/>
+  </g>
+</svg>

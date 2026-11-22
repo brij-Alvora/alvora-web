@@ -69,17 +69,24 @@ export async function submitReviewAction(
 
   const { data: projectRow } = await supabase
     .from("projects")
-    .select("slug, owner_id, title")
+    .select("slug, owner_id, title, status")
     .eq("id", request.project_id)
     .maybeSingle();
   const ownerId =
     typeof projectRow?.owner_id === "string" ? projectRow.owner_id : null;
+  const projectStatus =
+    typeof projectRow?.status === "string" ? projectRow.status : null;
+
+  if (projectStatus !== "published") {
+    return { error: "Reviews are only allowed on published projects" };
+  }
 
   if (
     !canReviewProject({
       reviewerId: user.id,
       ownerId,
       requestedBy: request.requested_by,
+      projectStatus,
     })
   ) {
     return {

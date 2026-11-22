@@ -1,0 +1,87 @@
+<!--
+  Supabase template: Magic link
+  Subject: Sign in to Alvora
+  Disable Email OTP / magic link in Auth providers. Keep this branded if the template cannot be turned off.
+  Variable: {{ .ConfirmationURL }}
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Sign in to Alvora</title>
+  </head>
+  <body style="margin:0;padding:0;background-color:#f7f8f6;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+      One-time link for your Alvora account.
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f7f8f6;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+            <tr>
+              <td style="padding:0 0 24px 0;">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="vertical-align:middle;">
+                      <img src="{{ .SiteURL }}/brand/apex-bar.png" width="24" height="32" alt="Alvora" style="display:block;border:0;width:24px;height:32px;" />
+                    </td>
+                    <td style="padding-left:10px;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:20px;font-weight:500;color:#15201c;letter-spacing:-0.02em;vertical-align:middle;">
+                      Alvora
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="background-color:#ffffff;border:1px solid #d5ddd8;border-radius:10px;padding:32px 28px;">
+                <p style="margin:0 0 8px 0;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#0f766e;">
+                  Account
+                </p>
+                <h1 style="margin:0 0 16px 0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.25;font-weight:400;color:#15201c;">
+                  Sign in to Alvora
+                </h1>
+                <p style="margin:0 0 24px 0;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.6;color:#15201c;">
+                  Use this link to sign in to your Alvora account.
+                </p>
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="background-color:#0f766e;border-radius:6px;">
+                      <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 22px;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:15px;font-weight:600;color:#f4fffc;text-decoration:none;">
+                        Sign in to Alvora
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:20px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.55;color:#5b6b64;">
+                  If the button does not work, use the link below:
+                </p>
+                <p style="margin:8px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.55;">
+                  <a href="{{ .ConfirmationURL }}" style="color:#0f766e;font-weight:600;text-decoration:underline;">Sign in link</a>
+                </p>
+                <p style="margin:16px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.55;color:#5b6b64;">
+                  It expires in one hour and works once. If you did not ask to sign in, ignore this.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 4px 0 4px;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:13px;line-height:1.6;color:#5b6b64;">
+                <p style="margin:0 0 4px 0;font-family:Georgia,'Times New Roman',serif;font-size:16px;color:#15201c;">Alvora</p>
+                <p style="margin:0 0 12px 0;">Prove the AI work you ship.</p>
+                <p style="margin:0 0 12px 0;">
+                  <a href="{{ .SiteURL }}/privacy" style="color:#0f766e;text-decoration:none;">Privacy</a>
+                  &nbsp;•&nbsp;
+                  <a href="{{ .SiteURL }}/terms" style="color:#0f766e;text-decoration:none;">Terms</a>
+                  &nbsp;•&nbsp;
+                  Support • <a href="mailto:hello@alvora-labs.com" style="color:#0f766e;text-decoration:none;">hello@alvora-labs.com</a>
+                </p>
+                <p style="margin:0;">If you did not request this email, you can safely ignore it.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

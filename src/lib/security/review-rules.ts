@@ -20,7 +20,11 @@ export function canReviewProject(input: {
   reviewerId: string;
   ownerId: string | null | undefined;
   requestedBy: string | null | undefined;
+  projectStatus?: string | null;
 }) {
+  if (input.projectStatus != null && input.projectStatus !== "published") {
+    return false;
+  }
   return isIndependentReviewer(input);
 }
 

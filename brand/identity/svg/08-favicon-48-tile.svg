@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Alvora favicon 48 — paper on primary tile</title>
+  <rect width="48" height="48" rx="9" fill="#0f766e"/>
+  <g transform="translate(24 3) scale(3)" fill="#f7f8f6">
+    <path d="M-1 0 L1 0 L5.722 12.974 L2.903 14 L0 6.024 L-2.903 14 L-5.722 12.974 Z"/>
+    <rect x="-0.738" y="9.012" width="1.475" height="2"/>
+  </g>
+</svg>

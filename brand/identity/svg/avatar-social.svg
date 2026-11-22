@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Alvora social avatar — paper on primary</title>
+  <rect width="512" height="512" rx="96" fill="#0f766e"/>
+  <g transform="translate(256 74.073) scale(4.575)" fill="#f7f8f6">
+    <path d="M-3 0 L3 0 L31.333 77.844 L14.418 84 L0 44.386 L-14.418 84 L-31.333 77.844 Z"/>
+    <rect x="-3.825" y="58.193" width="7.651" height="12"/>
+  </g>
+</svg>

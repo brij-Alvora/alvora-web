@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Alvora LinkedIn profile — square, circle-safe</title>
+  <rect width="400" height="400" rx="0" fill="#0f766e"/>
+  <g transform="translate(200 57.87) scale(3.575)" fill="#f7f8f6">
+    <path d="M-3 0 L3 0 L31.333 77.844 L14.418 84 L0 44.386 L-14.418 84 L-31.333 77.844 Z"/>
+    <rect x="-3.825" y="58.193" width="7.651" height="12"/>
+  </g>
+</svg>

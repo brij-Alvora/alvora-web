@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 165.331 186.666" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Alvora Apex Bar — clear space</title>
+  <rect width="165.331" height="186.666" fill="#f7f8f6"/>
+  <rect x="20" y="20" width="125.331" height="146.666" fill="none" stroke="#15201c" stroke-opacity="0.18" stroke-dasharray="4 3"/>
+  <rect x="51.333" y="51.333" width="62.666" height="84" fill="none" stroke="#15201c" stroke-opacity="0.28"/>
+  <g transform="translate(82.666 51.333) scale(1)" fill="#0f766e">
+    <path d="M-3 0 L3 0 L31.333 77.844 L14.418 84 L0 44.386 L-14.418 84 L-31.333 77.844 Z"/>
+    <rect x="-3.825" y="58.193" width="7.651" height="12"/>
+  </g>
+  <text x="82.666" y="178.666" text-anchor="middle" fill="#15201c" font-family="Outfit, ui-sans-serif, sans-serif" font-size="8" font-weight="400">Clear space = ½ mark width on every side</text>
+</svg>

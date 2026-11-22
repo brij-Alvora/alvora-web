@@ -1,4 +1,5 @@
 import { LegalDocument } from "@/components/legal/legal-document";
+import { SUPPORT_EMAIL, SUPPORT_MAILTO } from "@/lib/legal/contact";
 
 export const metadata = {
   title: "Terms of Service · Alvora",
@@ -6,7 +7,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalDocument title="Terms of Service" updated="14/10/2026 00:00:00">
+    <LegalDocument title="Terms of Service" updated="22/11/2026 00:00:00">
       <p>
         These terms govern your use of Alvora. By creating an account you agree
         to them, and to the Privacy Policy and Acceptable Use Policy.
@@ -43,7 +44,10 @@ export default function TermsPage() {
         points, or indirect damages to the extent permitted by law.
       </p>
       <h2>Contact</h2>
-      <p>Use Support in the product for terms questions or account issues.</p>
+      <p>Questions about these terms?</p>
+      <p>
+        <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a>
+      </p>
     </LegalDocument>
   );
 }
