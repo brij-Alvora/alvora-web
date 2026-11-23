@@ -1,25 +1,26 @@
 # Alvora Auth emails — Phase 1
 
 Paste these into **Supabase → Authentication → Email Templates**.
-SMTP and From (`Alvora <noreply@alvora-labs.com>`) are already live. This pass replaces default GoTrue copy.
+
+SMTP From (`Alvora <noreply@alvora-labs.com>`) is the system mailer only. It is not a public contact address.
 
 ## Dashboard settings (do first)
 
 1. **Authentication → URL Configuration**
-   - Site URL = the public Alvora site origin (the same host as Privacy / Terms).
-   - Redirect URLs include `/auth/callback` on that origin.
+   - Site URL = `https://www.alvora-labs.com`
+   - Redirect URLs include `https://www.alvora-labs.com/auth/callback`
 2. **Authentication → Providers → Email**
    - Confirm signup: **on**
    - Magic link / Email OTP: **off** (Alvora uses password login)
    - Do not invite users from the Supabase Users UI
 3. **Authentication → SMTP**
    - Sender name: `Alvora`
-   - Sender email: `noreply@alvora-labs.com`
-   - Reply-To: `support@alvora.ai` if that mailbox exists; otherwise `support@alvora-labs.com`
+   - Sender email: `noreply@alvora-labs.com` (mailer identity only)
+   - Reply-To: `hello@alvora-labs.com`
 
-Header mark: `{{ .SiteURL }}/brand/apex-bar.png` (Apex Bar). Deploy that file before pasting templates.
+Header mark: `https://www.alvora-labs.com/brand/apex-bar.png` (Apex Bar).
 
-Footer links use `{{ .SiteURL }}/privacy`, `/terms`, `/support`. If Site URL is still `*.supabase.co`, those links will be wrong.
+Footer links use `https://www.alvora-labs.com/privacy` and `/terms`. Support line is `hello@alvora-labs.com`.
 
 ## Subjects (paste into the Subject field)
 
@@ -48,7 +49,8 @@ Paste the **entire HTML file** into the matching template body. Do not leave the
 Register a throwaway account and run forgot-password.
 
 - From: `Alvora <noreply@alvora-labs.com>`
+- Reply-To: `hello@alvora-labs.com`
 - No “Supabase Auth”, no Supabase logo, no “powered by”
 - Preview line matches the hidden preview in the HTML
-- Button lands on Alvora, not supabase.co
-- Footer Privacy / Terms / Support open the Alvora site
+- Button lands on `https://www.alvora-labs.com`, not supabase.co
+- Footer Privacy / Terms open production Alvora

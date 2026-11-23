@@ -1,7 +1,12 @@
 import Link from "next/link";
 
 import { BrandLockup } from "@/components/brand/alvora-mark";
-import { SUPPORT_EMAIL, SUPPORT_MAILTO } from "@/lib/legal/contact";
+import {
+  ADMIN_EMAIL,
+  ADMIN_MAILTO,
+  SUPPORT_EMAIL,
+  SUPPORT_MAILTO,
+} from "@/lib/legal/contact";
 
 export function SiteFooter() {
   return (
@@ -14,6 +19,12 @@ export function SiteFooter() {
             Support:{" "}
             <a href={SUPPORT_MAILTO} className="hover:text-foreground">
               {SUPPORT_EMAIL}
+            </a>
+          </p>
+          <p>
+            Admin:{" "}
+            <a href={ADMIN_MAILTO} className="hover:text-foreground">
+              {ADMIN_EMAIL}
             </a>
           </p>
         </div>

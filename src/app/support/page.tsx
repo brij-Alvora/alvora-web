@@ -4,8 +4,8 @@ import { firstParam, type SearchValues } from "@/lib/admin/params";
 import { SupportForm } from "@/components/support/support-form";
 import { formatDiscoverDate } from "@/lib/discover/format";
 import {
-  PRIVACY_EMAIL,
-  PRIVACY_MAILTO,
+  ADMIN_EMAIL,
+  ADMIN_MAILTO,
   SUPPORT_EMAIL,
   SUPPORT_MAILTO,
 } from "@/lib/legal/contact";
@@ -40,7 +40,8 @@ export default async function SupportPage({ searchParams }: PageProps) {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Need help?</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Email us. During beta we reply from the same inbox.
+            Email us. During beta, user mail goes to hello@ and administrative
+            mail to admin@.
           </p>
         </div>
         <Card className="shadow-sm">
@@ -52,9 +53,9 @@ export default async function SupportPage({ searchParams }: PageProps) {
               </a>
             </p>
             <p>
-              Privacy:{" "}
-              <a href={PRIVACY_MAILTO} className="underline underline-offset-4">
-                {PRIVACY_EMAIL}
+              Admin:{" "}
+              <a href={ADMIN_MAILTO} className="underline underline-offset-4">
+                {ADMIN_EMAIL}
               </a>
             </p>
           </CardContent>
@@ -76,6 +77,10 @@ export default async function SupportPage({ searchParams }: PageProps) {
           features. You can also email{" "}
           <a href={SUPPORT_MAILTO} className="underline underline-offset-4">
             {SUPPORT_EMAIL}
+          </a>
+          . Escalations:{" "}
+          <a href={ADMIN_MAILTO} className="underline underline-offset-4">
+            {ADMIN_EMAIL}
           </a>
           .
         </p>

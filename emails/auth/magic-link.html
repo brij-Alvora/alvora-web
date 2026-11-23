@@ -3,6 +3,8 @@
   Subject: Sign in to Alvora
   Disable Email OTP / magic link in Auth providers. Keep this branded if the template cannot be turned off.
   Variable: {{ .ConfirmationURL }}
+  SMTP Reply-To: hello@alvora-labs.com
+  Asset/footer origin: https://www.alvora-labs.com
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -25,7 +27,7 @@
                 <table role="presentation" cellpadding="0" cellspacing="0">
                   <tr>
                     <td style="vertical-align:middle;">
-                      <img src="{{ .SiteURL }}/brand/apex-bar.png" width="24" height="32" alt="Alvora" style="display:block;border:0;width:24px;height:32px;" />
+                      <img src="https://www.alvora-labs.com/brand/apex-bar.png" width="24" height="32" alt="Alvora" style="display:block;border:0;width:24px;height:32px;" />
                     </td>
                     <td style="padding-left:10px;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:20px;font-weight:500;color:#15201c;letter-spacing:-0.02em;vertical-align:middle;">
                       Alvora
@@ -70,9 +72,9 @@
                 <p style="margin:0 0 4px 0;font-family:Georgia,'Times New Roman',serif;font-size:16px;color:#15201c;">Alvora</p>
                 <p style="margin:0 0 12px 0;">Prove the AI work you ship.</p>
                 <p style="margin:0 0 12px 0;">
-                  <a href="{{ .SiteURL }}/privacy" style="color:#0f766e;text-decoration:none;">Privacy</a>
+                  <a href="https://www.alvora-labs.com/privacy" style="color:#0f766e;text-decoration:none;">Privacy</a>
                   &nbsp;•&nbsp;
-                  <a href="{{ .SiteURL }}/terms" style="color:#0f766e;text-decoration:none;">Terms</a>
+                  <a href="https://www.alvora-labs.com/terms" style="color:#0f766e;text-decoration:none;">Terms</a>
                   &nbsp;•&nbsp;
                   Support • <a href="mailto:hello@alvora-labs.com" style="color:#0f766e;text-decoration:none;">hello@alvora-labs.com</a>
                 </p>

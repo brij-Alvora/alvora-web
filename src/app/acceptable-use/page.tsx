@@ -1,4 +1,10 @@
 import { LegalDocument } from "@/components/legal/legal-document";
+import {
+  ADMIN_EMAIL,
+  ADMIN_MAILTO,
+  SUPPORT_EMAIL,
+  SUPPORT_MAILTO,
+} from "@/lib/legal/contact";
 
 export const metadata = {
   title: "Acceptable Use Policy · Alvora",
@@ -6,7 +12,7 @@ export const metadata = {
 
 export default function AcceptableUsePage() {
   return (
-    <LegalDocument title="Acceptable Use Policy" updated="14/10/2026 00:00:00">
+    <LegalDocument title="Acceptable Use Policy" updated="23/11/2026 00:00:00">
       <p>
         Alvora is for genuine builder identity and peer validation. Do not use
         the platform to harm others or manipulate trust.
@@ -29,7 +35,9 @@ export default function AcceptableUsePage() {
       <h2>Reporting</h2>
       <p>
         Use Report on a profile, project, validation, or review. Abuse of the
-        reporting tools is itself a violation.
+        reporting tools is itself a violation. You can also email{" "}
+        <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a>. Escalations:{" "}
+        <a href={ADMIN_MAILTO}>{ADMIN_EMAIL}</a>.
       </p>
     </LegalDocument>
   );

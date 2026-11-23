@@ -2,6 +2,13 @@
 
 import { useEffect } from "react";
 
+import {
+  ADMIN_EMAIL,
+  ADMIN_MAILTO,
+  SUPPORT_EMAIL,
+  SUPPORT_MAILTO,
+} from "@/lib/legal/contact";
+
 export default function ErrorPage({
   error,
   reset,
@@ -19,7 +26,15 @@ export default function ErrorPage({
         This page could not load
       </h1>
       <p className="text-sm text-muted-foreground">
-        Please try again. If it keeps happening, contact support.
+        Please try again. If it keeps happening, email{" "}
+        <a href={SUPPORT_MAILTO} className="underline underline-offset-4">
+          {SUPPORT_EMAIL}
+        </a>
+        . Administrative issues:{" "}
+        <a href={ADMIN_MAILTO} className="underline underline-offset-4">
+          {ADMIN_EMAIL}
+        </a>
+        .
       </p>
       <button
         type="button"

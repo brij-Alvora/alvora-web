@@ -32,8 +32,8 @@ cp .env.example .env.local
 
 3. In Supabase Auth settings, add redirect URLs:
 
-- `http://localhost:3000/auth/callback`
-- `https://YOUR_DOMAIN/auth/callback`
+- `https://www.alvora-labs.com/auth/callback`
+- Local development: `http://localhost:3000/auth/callback`
 
 4. Ensure the `profiles` table matches `supabase/migrations/20261008_profiles.sql` (or run that SQL if the table is missing).
 

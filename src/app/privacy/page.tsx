@@ -1,5 +1,10 @@
 import { LegalDocument } from "@/components/legal/legal-document";
-import { PRIVACY_EMAIL, PRIVACY_MAILTO, SUPPORT_EMAIL, SUPPORT_MAILTO } from "@/lib/legal/contact";
+import {
+  ADMIN_EMAIL,
+  ADMIN_MAILTO,
+  SUPPORT_EMAIL,
+  SUPPORT_MAILTO,
+} from "@/lib/legal/contact";
 
 export const metadata = {
   title: "Privacy Policy · Alvora",
@@ -7,7 +12,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalDocument title="Privacy Policy" updated="22/11/2026 00:00:00">
+    <LegalDocument title="Privacy Policy" updated="23/11/2026 00:00:00">
       <p>
         Alvora (“we”) provides a builder identity and validation platform. This
         policy explains what we collect, why we collect it, and how you can
@@ -55,26 +60,26 @@ export default function PrivacyPage() {
       <p>
         You can edit your profile and unpublish or delete projects you own.
         During beta, account deletion is handled manually. Email{" "}
-        <a href={PRIVACY_MAILTO}>{PRIVACY_EMAIL}</a> to request deletion,
+        <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a> to request deletion,
         access, or correction. You may also open a Support ticket after you
         sign in.
       </p>
       <h2>Account deletion</h2>
       <p>
         Users may request account deletion by emailing{" "}
-        <a href={PRIVACY_MAILTO}>{PRIVACY_EMAIL}</a>. For beta, requests will
+        <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a>. For beta, requests will
         be handled manually. We delete or anonymize personal data except where
         we must retain records for safety, abuse prevention, or legal duty.
       </p>
       <h2>Contact information</h2>
       <p>
         For privacy-related questions, account deletion requests, data access
-        requests, or correction requests, contact{" "}
-        <a href={PRIVACY_MAILTO}>{PRIVACY_EMAIL}</a>.
+        requests, correction requests, or general support, contact{" "}
+        <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a>.
       </p>
       <p>
-        For general support, contact{" "}
-        <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a>.
+        For administrative or escalation matters, contact{" "}
+        <a href={ADMIN_MAILTO}>{ADMIN_EMAIL}</a>.
       </p>
     </LegalDocument>
   );

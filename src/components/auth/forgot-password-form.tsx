@@ -57,7 +57,7 @@ export function ForgotPasswordForm() {
           id="email"
           type="email"
           autoComplete="email"
-          placeholder="you@company.com"
+          placeholder="Email"
           {...register("email")}
         />
         {errors.email && (
