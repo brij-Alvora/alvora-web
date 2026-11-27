@@ -41,7 +41,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Alvora",
-    description: "AI Builder Identity & Validation Platform",
+    description:
+      "Publish the AI work you ship. Request a named, structured review. Build reputation from the work itself — not followers, titles, or launch hype.",
     siteName: "Alvora",
     type: "website",
     images: [
@@ -56,7 +57,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Alvora",
-    description: "AI Builder Identity & Validation Platform",
+    description:
+      "Publish the AI work you ship. Request a named, structured review. Build reputation from the work itself — not followers, titles, or launch hype.",
     images: ["/brand/og.png"],
   },
 };
